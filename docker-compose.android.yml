@@ -1,0 +1,10 @@
+services:
+  quasar:
+    restart: "no"
+    # env_file:
+    #   - .env.production
+    build:
+      dockerfile: ./Dockerfile
+      context: ./
+      target: android-stage
+

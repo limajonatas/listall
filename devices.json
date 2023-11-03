@@ -1,0 +1,6 @@
+{
+  "supportedAbis": ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"],
+  "screenDensity": 320,
+  "sdkVersion": 33,
+  "supportedLocales": ["pt-BR"]
+}
