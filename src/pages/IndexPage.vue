@@ -214,7 +214,7 @@
                   color="primary"
                   icon="add"
                   label="Criar Lista"
-                  @click="
+                  @click.prevent="
                     () => {
                       isNewList = false;
                       createList();
@@ -390,7 +390,7 @@ export default defineComponent({
         position: "top",
         timeout: 2000,
       });
-      // finalize(reset);
+      reset();
     }
 
     function createList() {
