@@ -54,7 +54,9 @@ cordova build android
 <h2>Progresso do Aplicativo</h2>
 <p>Últimas Atualizações (Versão 0.1.0 - Atual):</p>
 <ul>
-  <li>Editar item da lista (arrastando ou clicando e segurando no item)</li>
+  <li>Editar item da lista (arrastando ou segurando no item - hold)</li>
+  <li>Menu</li>
+  <li>Configurações</li>
 </ul>
 
 <h2>Download do APK DEBUG</h2>

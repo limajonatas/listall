@@ -390,6 +390,7 @@
 import { defineComponent, ref, onMounted, watch, computed } from "vue";
 import { Notify, Dialog } from "quasar";
 import { useCountItemsStore } from "src/stores/items-count-store";
+import { useConfig } from "src/stores/config-store";
 import { storeToRefs } from "pinia";
 import { randomColor } from "src/utils/utils";
 
@@ -397,6 +398,9 @@ export default defineComponent({
   name: "IndexPage",
   setup() {
     const itemsStore = useCountItemsStore();
+    const configStore = useConfig();
+    const { confirmDeleteItem } = storeToRefs(configStore);
+    const { everyCountItems, countItemsLists } = storeToRefs(itemsStore);
     const titleNewItem = ref("");
     const descriptionNewItem = ref("");
     const nameNewList = ref("");
@@ -404,7 +408,6 @@ export default defineComponent({
     const dialog = ref(false);
     const dialogCreateNameList = ref(false);
     const isNewList = ref(false);
-    const { everyCountItems, countItemsLists } = storeToRefs(itemsStore);
     const listForNewItem = ref(
       countItemsLists.value.length > 0
         ? countItemsLists.value[countItemsLists.value.length - 1]
@@ -482,14 +485,20 @@ export default defineComponent({
     }
 
     function onRight({ reset }, item) {
-      Dialog.create({
-        title: "Excluir item",
-        message: `Deseja excluir o item <strong>${item.title}</strong>?`,
-        cancel: true,
-        html: true,
-      }).onOk(() => {
-        deleteItem(item);
-      });
+      if (confirmDeleteItem.value) {
+        Dialog.create({
+          title: "Excluir item",
+          message: `Deseja excluir o item <strong>${item.title}</strong>?`,
+          cancel: true,
+          html: true,
+        }).onOk(() => {
+          deleteItem(item);
+        });
+        reset();
+        return;
+      }
+
+      deleteItem(item);
       reset();
     }
 
