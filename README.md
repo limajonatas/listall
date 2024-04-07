@@ -58,7 +58,8 @@ cordova build android
 </ul>
 
 <h2>Download do APK DEBUG</h2>
-<p>Você pode baixar a versão DEBUG do APK <a href="https://github.com/limajonatas/listall/tree/release/v.0.1.0/dist/cordova/android/apk/debug/app-debug.apk">aqui</a>.</p>
+<p>Você pode baixar a versão DEBUG do APK <a href="https://github.com/limajonatas/listall/tree/release/v.0.1.0/dist/cordova/android/apk/debug/app-debug.apk" download>aqui</a>.</p>
+
 
 </body>
 </html>
