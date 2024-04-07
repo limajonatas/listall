@@ -253,6 +253,7 @@ export const useCountItemsStore = defineStore("everyCountItems", {
     },
 
     editItem(id, idList, title, description, idNewList) {
+      title = title.toUpperCase();
       const indexList = this.findList(idList);
       if (indexList === -1) {
         Notify.create({

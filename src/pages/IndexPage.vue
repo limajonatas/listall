@@ -502,7 +502,9 @@ export default defineComponent({
     const oldItem = ref(null);
 
     function onLeft({ reset }, item) {
-      itemToEdit.value = item;
+      itemToEdit.value = {...item};
+      itemToEdit.value.newList = item.idList;
+      oldItem.value = {...item};
       optionsItemDialog.value = true;
       reset();
     }
