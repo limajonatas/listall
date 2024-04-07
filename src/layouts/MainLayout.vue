@@ -29,7 +29,12 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
+    <q-drawer
+      v-model="leftDrawerOpen"
+      show-if-above
+      bordered
+      class="column justify-between"
+    >
       <q-list>
         <q-item-label header> Menu </q-item-label>
 
@@ -38,7 +43,11 @@
           :key="link.title"
           v-bind="link"
         />
+        <!-- Informações de autoria -->
       </q-list>
+      <q-item class="text-caption">
+        <label><strong>Developed by:</strong> Jonatas Lima </label></q-item
+      >
     </q-drawer>
 
     <q-page-container>
@@ -49,11 +58,7 @@
     <q-dialog v-model="showDialog">
       <q-card>
         <div class="column items-end">
-          <q-btn
-            icon="close"
-            flat
-            @click="() => (showDialog = false)"
-          ></q-btn>
+          <q-btn icon="close" flat @click="() => (showDialog = false)"></q-btn>
         </div>
         <q-card-section class="q-pt-none">
           <div class="text-h6">Configurações</div>
@@ -70,14 +75,15 @@
 </template>
 
 <script>
-import { defineComponent, ref } from "vue";
+import { defineComponent, onMounted, ref } from "vue";
 import EssentialLink from "components/EssentialLink.vue";
 import { useConfig } from "src/stores/config-store";
 import { storeToRefs } from "pinia";
 const linksList = [
   {
     title: "Reportar Bug/Feedback",
-    caption: "Envie um e-mail para reportar um bug ou dar um feedback/sugestão.",
+    caption:
+      "Envie um e-mail para reportar um bug ou dar um feedback/sugestão.",
     icon: "bug_report",
     link: "mailto:jonataslimafsa@gmail.com",
   },
@@ -96,6 +102,9 @@ export default defineComponent({
     const leftDrawerOpen = ref(false);
     const showDialog = ref(false); // Nova referência para controlar a exibição do dialog
 
+    onMounted(() => {
+      leftDrawerOpen.value = false;
+    });
     return {
       essentialLinks: linksList,
       leftDrawerOpen,
