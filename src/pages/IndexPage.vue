@@ -388,7 +388,7 @@
 
 <script>
 import { defineComponent, ref, onMounted, watch, computed } from "vue";
-import { Notify } from "quasar";
+import { Notify, Dialog } from "quasar";
 import { useCountItemsStore } from "src/stores/items-count-store";
 import { storeToRefs } from "pinia";
 import { randomColor } from "src/utils/utils";
@@ -482,6 +482,18 @@ export default defineComponent({
     }
 
     function onRight({ reset }, item) {
+      Dialog.create({
+        title: "Excluir item",
+        message: `Deseja excluir o item <strong>${item.title}</strong>?`,
+        cancel: true,
+        html: true,
+      }).onOk(() => {
+        deleteItem(item);
+      });
+      reset();
+    }
+
+    function deleteItem(item) {
       const itemDeleted = itemsStore.deleteItem(item.id, item.idList);
       if (!itemDeleted) return;
       Notify.create({
@@ -495,16 +507,15 @@ export default defineComponent({
       if (navigator && navigator.vibrate) {
         navigator.vibrate(50);
       }
-      reset();
     }
 
     const itemToEdit = ref(null);
     const oldItem = ref(null);
 
     function onLeft({ reset }, item) {
-      itemToEdit.value = {...item};
+      itemToEdit.value = { ...item };
       itemToEdit.value.newList = item.idList;
-      oldItem.value = {...item};
+      oldItem.value = { ...item };
       optionsItemDialog.value = true;
       reset();
     }

@@ -106,28 +106,7 @@ export const useCountItemsStore = defineStore("everyCountItems", {
           menu: false,
         });
       } else {
-        // let newTitle = title;
-        // let match;
-        // let counter = 1;
-
-        // while (
-        //   this.countItemsLists[index].data.some(
-        //     (item) => item.title === newTitle && item.tagColor === tagColor
-        //   )
-        // ) {
-        //   match = newTitle.match(/_(\d+)$/);
-
-        //   //EXEMPLO: se o título for "Item_1" o match será ["_1", "1"] então o titulo será "Item_2"
-        //   if (match) {
-        //     counter = parseInt(match[1]) + 1;
-        //     newTitle = `${newTitle.slice(0, match.index)}_${counter}`;
-        //   } else {
-        //     newTitle = `${newTitle}_1`;
-        //   }
-        // }
-
         try {
-
           let newTitle = this.getUniqueTitle(title, tagColor, index, this.countItemsLists[index].data.length);
           this.countItemsLists[index].data.push({
             type: "count",
