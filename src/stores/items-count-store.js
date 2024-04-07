@@ -22,9 +22,10 @@ item:{
 */
 export const useCountItemsStore = defineStore("everyCountItems", {
   state: () => ({
-    countItemsLists: JSON.parse(localStorage.getItem("countList")) || [], //lista de listas de itens contadores
+    countItemsLists: [], //lista de listas de itens contadores
     everyCountItems: [], //lista de todos os itens contadores
   }),
+  persist: true,
 
   getters: {
     tagColorList() {
@@ -72,10 +73,8 @@ export const useCountItemsStore = defineStore("everyCountItems", {
       return newTitle;
     },
     initEveryCountItems() {
-      this.everyCountItems =
-        JSON.parse(localStorage.getItem("everyCountItems")) || [];
+      this.everyCountItems = [];
       this.concatItems(); // Atualiza everyCountItems
-      this.saveItemsToLocalStorage(); // Salve os dados no localStorage após cada alteração
     },
     createNewItem(title, description, tagColor, nameList, count, editItem) {
       title = title.toUpperCase();
@@ -107,7 +106,12 @@ export const useCountItemsStore = defineStore("everyCountItems", {
         });
       } else {
         try {
-          let newTitle = this.getUniqueTitle(title, tagColor, index, this.countItemsLists[index].data.length);
+          let newTitle = this.getUniqueTitle(
+            title,
+            tagColor,
+            index,
+            this.countItemsLists[index].data.length
+          );
           this.countItemsLists[index].data.push({
             type: "count",
             id: this.countItemsLists[index].data.length + 1,
@@ -157,7 +161,6 @@ export const useCountItemsStore = defineStore("everyCountItems", {
         }
       }
       this.concatItems();
-      this.saveItemsToLocalStorage(); // Salve os dados no localStorage após cada alteração
     },
     createNewList(nameList, tagColor) {
       //verifica se já existe uma lista com a cor fornecida
@@ -194,7 +197,6 @@ export const useCountItemsStore = defineStore("everyCountItems", {
         return false;
       }
       this.concatItems();
-      this.saveItemsToLocalStorage(); // Salve os dados no localStorage após cada alteração
       return true;
     },
     editList(id, nameList, tagColor) {
@@ -228,7 +230,6 @@ export const useCountItemsStore = defineStore("everyCountItems", {
         }
       }
       this.concatItems();
-      this.saveItemsToLocalStorage();
     },
 
     editItem(id, idList, title, description, idNewList) {
@@ -291,7 +292,6 @@ export const useCountItemsStore = defineStore("everyCountItems", {
       }
 
       this.concatItems();
-      this.saveItemsToLocalStorage(); // Salve os dados no localStorage após cada alteração
       Notify.create({
         message: "Item editado com sucesso",
         color: "positive",
@@ -329,7 +329,6 @@ export const useCountItemsStore = defineStore("everyCountItems", {
       this.countItemsLists[indexList].data.splice(index, 1);
 
       this.concatItems();
-      this.saveItemsToLocalStorage();
       return item;
     },
     incrementCount(id, idList) {
@@ -359,7 +358,6 @@ export const useCountItemsStore = defineStore("everyCountItems", {
       this.countItemsLists[indexList].data[index].count++;
 
       this.concatItems();
-      this.saveItemsToLocalStorage(); // Salve os dados no localStorage após cada alteração
     },
     decrementCount(id, idList) {
       const indexList = this.findList(idList);
@@ -389,7 +387,6 @@ export const useCountItemsStore = defineStore("everyCountItems", {
         this.countItemsLists[indexList].data[index].count--;
 
         this.concatItems();
-        this.saveItemsToLocalStorage(); // Salve os dados no localStorage após cada alteração
       }
     },
     concatItems() {
@@ -404,13 +401,6 @@ export const useCountItemsStore = defineStore("everyCountItems", {
     },
     findList(id) {
       return this.countItemsLists.findIndex((list) => list.id === id);
-    },
-    saveItemsToLocalStorage() {
-      localStorage.setItem("countList", JSON.stringify(this.countItemsLists));
-      localStorage.setItem(
-        "everyCountItems",
-        JSON.stringify(this.everyCountItems)
-      );
     },
   },
 });

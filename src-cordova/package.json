@@ -23,5 +23,8 @@
     "plugins": {
       "cordova-plugin-vibration": {}
     }
+  },
+  "dependencies": {
+    "pinia-plugin-persistedstate": "^3.2.1"
   }
 }
