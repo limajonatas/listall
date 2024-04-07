@@ -1,61 +1,64 @@
-# CountAll (countall)
+<!DOCTYPE html>
+<html lang="pt-BR">
+<body>
 
-A Quasar Project
+<h1>CountAll (countall)</h1>
+<p>A Quasar Project</p>
 
-## Install the dependencies
-```bash
-yarn
-# or
+<h2>Instalar as dependências</h2>
+<pre><code>yarn
+# ou
 npm install
-```
+</code></pre>
 
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
-```bash
-quasar dev
-```
+<h3>Iniciar o aplicativo em modo de desenvolvimento (recarregamento de código em tempo real, relatório de erros, etc.)</h3>
+<pre><code>quasar dev
+</code></pre>
 
-
-### Lint the files
-```bash
-yarn lint
-# or
+<h3>Lint nos arquivos</h3>
+<pre><code>yarn lint
+# ou
 npm run lint
-```
+</code></pre>
 
-
-### Format the files
-```bash
-yarn format
-# or
+<h3>Formatar os arquivos</h3>
+<pre><code>yarn format
+# ou
 npm run format
-```
+</code></pre>
 
-## Configurando as variáveis de ambiente no Windows
+<h2>Configurando as variáveis de ambiente no Windows</h2>
+<ol>
+  <li>Pressione a tecla Windows e digite "Variáveis de ambiente" e clique em "Editar as variáveis de ambiente do sistema".</li>
+  <li>Na janela que se abre, clique em "Variáveis de ambiente...".</li>
+  <li>Na seção "Variáveis de usuário", clique em "Novo..." para adicionar uma nova variável de ambiente.</li>
+  <li>Digite o nome da variável (por exemplo, <code>ANDROID_HOME</code>) e o valor (o caminho para o diretório onde o Android SDK está instalado).</li>
+  <li>Repita os passos 3 e 4 para cada variável de ambiente que você precisa adicionar (<code>ANDROID_SDK_ROOT</code>, <code>JAVA_HOME</code>, <code>GRADLE_HOME</code>, etc.).</li>
+</ol>
 
-1. Pressione a tecla Windows e digite "Variáveis de ambiente" e clique em "Editar as variáveis de ambiente do sistema".
-2. Na janela que se abre, clique em "Variáveis de ambiente...".
-3. Na seção "Variáveis de usuário", clique em "Novo..." para adicionar uma nova variável de ambiente.
-4. Digite o nome da variável (por exemplo, `ANDROID_HOME`) e o valor (o caminho para o diretório onde o Android SDK está instalado).
-5. Repita os passos 3 e 4 para cada variável de ambiente que você precisa adicionar (`ANDROID_SDK_ROOT`, `JAVA_HOME`, `GRADLE_HOME`, etc.).
-
-## Gerando a versão de depuração
-
-Para gerar a versão de depuração (DEBUG) do seu aplicativo, você pode usar o seguinte comando:
-
-```bash
-quasar build -m cordova -T android -d
-# or
+<h2>Gerando a versão de depuração</h2>
+<p>Para gerar a versão de depuração (DEBUG) do seu aplicativo, você pode usar o seguinte comando:</p>
+<pre><code>quasar build -m cordova -T android -d
+# ou
 cordova build android
-```
-(na pasta src-cordova)
+</code></pre>
+<p>(na pasta src-cordova)</p>
 
+<h3>Compilar o aplicativo para produção</h3>
+<pre><code>quasar build
+</code></pre>
 
-### Build the app for production
-```bash
-quasar build
-```
+<h3>Personalizar a configuração</h3>
+<p>Veja <a href="https://v2.quasar.dev/quasar-cli-vite/quasar-config-js">Configurando quasar.config.js</a>.</p>
 
-### Customize the configuration
-See [Configuring quasar.config.js](https://v2.quasar.dev/quasar-cli-vite/quasar-config-js).
+<h2>Progresso do Aplicativo</h2>
+<p>Últimas Atualizações (Versão 0.1.0 - Atual):</p>
+<ul>
+  <li>Editar item da lista (arrastando ou clicando e segurando no item)</li>
+</ul>
 
+<h2>Download do APK DEBUG</h2>
+<p>Você pode baixar a versão DEBUG do APK <a href="https://github.com/limajonatas/listall/tree/release/v.0.1.0/dist/cordova/android/apk/debug/app-debug.apk">aqui</a>.</p>
 
+</body>
+</html>

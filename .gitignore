@@ -4,7 +4,9 @@ node_modules
 
 # Quasar core related directories
 .quasar
-/dist
+/dist/cordova/android/logs
+/dist/cordova/android/apk/debug/output-metadata.json
+/dist/spa
 /quasar.config.*.temporary.compiled*
 
 # Cordova related directories and files
