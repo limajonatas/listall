@@ -60,6 +60,7 @@
     >
       <q-slide-item
         @right="onRight($event, item)"
+        @left="onLeft($event, item)"
         right-color="red"
         v-for="item in everyCountItems"
         :key="item.id"
@@ -67,8 +68,50 @@
         <template v-slot:right>
           <q-icon name="delete" />
         </template>
+        <template v-slot:left>
+          <q-icon name="edit" />
+        </template>
         <template v-slot:default>
-          <q-card class="q-pl-lg q-py-sm q-pr-sm">
+          <q-card class="q-pl-lg q-py-sm q-pr-sm no-select">
+            <q-menu
+              anchor="center middle"
+              self="top middle"
+              v-model="item.menu"
+              context-menu
+              @show="item.menu = true"
+              @hide="item.menu = false"
+              style="width: 130px"
+            >
+              <q-list>
+                <q-item
+                  clickable
+                  v-close-popup
+                  @click="
+                    () => {
+                      optionsItemDialog = true;
+                      itemToEdit = { ...item };
+                      oldItem = { ...item };
+                      itemToEdit.newList = item.idList;
+                    }
+                  "
+                >
+                  <q-item-section>
+                    <q-icon name="edit" />
+                  </q-item-section>
+                  <q-item-section>Editar</q-item-section>
+                </q-item>
+                <q-item
+                  clickable
+                  v-close-popup
+                  @click="() => duplicateItem(item)"
+                >
+                  <q-item-section>
+                    <q-icon name="content_copy" />
+                  </q-item-section>
+                  <q-item-section>Duplicar</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
             <q-icon
               name="bookmark"
               class="absolute-top-left"
@@ -154,6 +197,7 @@
           <!-- LISTA DE LISTAS-->
           <div v-else class="q-gutter-y-md">
             <q-select
+              v-if="!isNewList"
               outlined
               label="Listas"
               clearable
@@ -187,7 +231,6 @@
 
             <div>
               <q-form v-if="isNewList" class="q-gutter-y-sm">
-                <hr />
                 Nova Lista
                 <q-input label="Nome" v-model="nameNewList" outlined> </q-input>
                 <q-input
@@ -209,18 +252,21 @@
                     </q-icon>
                   </template>
                 </q-input>
-                <q-btn
-                  type="submit"
-                  color="primary"
-                  icon="add"
-                  label="Criar Lista"
-                  @click.prevent="
-                    () => {
-                      isNewList = false;
-                      createList();
-                    }
-                  "
-                />
+                <q-card-actions align="right">
+                  <q-btn
+                    label="Cancelar"
+                    color="negative"
+                    flat
+                    @click="isNewList = false"
+                  />
+                  <q-btn
+                    type="submit"
+                    color="primary"
+                    icon="add"
+                    label="Criar Lista"
+                    @click.prevent="createList()"
+                  />
+                </q-card-actions>
               </q-form>
               <q-card-actions align="right" v-if="!isNewList">
                 <q-btn
@@ -243,6 +289,7 @@
       </q-card>
     </q-dialog>
 
+    <!--CREATE FIRST LIST-->
     <q-dialog v-model="dialogCreateNameList">
       <q-card>
         <q-card-section class="q-gutter-y-sm">
@@ -283,6 +330,57 @@
             @click="continueCreateNewItem()"
           />
         </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!--EDIT ITEM-->
+    <q-dialog v-model="optionsItemDialog">
+      <q-card>
+        <q-card-section>
+          <label class="text-bold text-subtitle1">Editar Item</label>
+          <q-form @submit.prevent="editItem()" class="q-gutter-y-sm">
+            <q-input
+              class="full-width"
+              v-model="itemToEdit.title"
+              label="Título"
+              outlined
+            />
+            <q-input
+              class="full-width"
+              v-model="itemToEdit.description"
+              label="Descrição"
+              outlined
+            />
+            <div class="row no-wrap">
+              <q-select
+                class="full-width"
+                v-model="itemToEdit.newList"
+                label="Lista"
+                :options="countItemsLists"
+                :option-label="
+                  (list) => `${list.id} - ${list.nameList} - ${list.tagColor} `
+                "
+                option-value="id"
+                map-options
+                outlined
+              />
+            </div>
+            <q-card-actions align="right">
+              <q-btn
+                label="Cancelar"
+                color="negative"
+                flat
+                @click="optionsItemDialog = false"
+              />
+              <q-btn
+                label="Salvar"
+                color="primary"
+                type="submit"
+                :disable="disableButtonEditItem"
+              />
+            </q-card-actions>
+          </q-form>
+        </q-card-section>
       </q-card>
     </q-dialog>
   </q-page>
@@ -334,6 +432,7 @@ export default defineComponent({
         return;
       }
 
+      //Se não houver nenhuma lista criada, cria uma lista
       if (countItemsLists.value.length == 0) {
         dialogCreateNameList.value = true;
         return;
@@ -358,16 +457,17 @@ export default defineComponent({
       itemsStore.createNewItem(
         titleNewItem.value,
         descriptionNewItem.value,
-        listForNewItem.value ? listForNewItem.value?.tagColor : color.value
+        listForNewItem.value ? listForNewItem.value?.tagColor : color.value,
+        nameNewList.value
       );
 
-      Notify.create({
-        message: "Item criado com sucesso",
-        color: "positive",
-        icon: "check_circle",
-        position: "top",
-        timeout: 2000,
-      });
+      // Notify.create({
+      //   message: "Item criado com sucesso",
+      //   color: "positive",
+      //   icon: "check_circle",
+      //   position: "top",
+      //   timeout: 2000,
+      // });
       titleNewItem.value = "";
       descriptionNewItem.value = "";
       listForNewItem.value =
@@ -383,6 +483,7 @@ export default defineComponent({
 
     function onRight({ reset }, item) {
       const itemDeleted = itemsStore.deleteItem(item.id, item.idList);
+      if (!itemDeleted) return;
       Notify.create({
         message: `O item ${itemDeleted.title} foi excluído com sucesso`,
         color: "warning",
@@ -390,6 +491,19 @@ export default defineComponent({
         position: "top",
         timeout: 2000,
       });
+
+      if (navigator && navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+      reset();
+    }
+
+    const itemToEdit = ref(null);
+    const oldItem = ref(null);
+
+    function onLeft({ reset }, item) {
+      itemToEdit.value = item;
+      optionsItemDialog.value = true;
       reset();
     }
 
@@ -401,7 +515,7 @@ export default defineComponent({
           color.value
         );
         if (!success) {
-          isNewList.value = true;
+          //isNewList.value = true; //mantém a tela de criação de lista aberta
           return;
         }
         // dialog.value = false;
@@ -409,6 +523,8 @@ export default defineComponent({
         color.value = randomColor();
         listForNewItem.value =
           countItemsLists.value[countItemsLists.value.length - 1];
+
+        isNewList.value = false; //fecha a tela de criação de lista
         return;
       }
       Notify.create({
@@ -426,6 +542,49 @@ export default defineComponent({
       //   itemsStore.everyCountItems = JSON.parse(localStorage.getItem("everyCountItems")) || [];
       // }
       itemsStore.initEveryCountItems();
+    });
+    const optionsItemDialog = ref(false);
+    const optionsItem = [
+      { id: 1, name: "Editar" },
+      { id: 2, name: "Duplicar" },
+    ];
+    const optionChosen = ref(null);
+
+    function editItem() {
+      if (
+        itemsStore.editItem(
+          itemToEdit.value.id,
+          itemToEdit.value.idList,
+          itemToEdit.value.title,
+          itemToEdit.value.description,
+          itemToEdit.value.newList?.id ?? itemToEdit.value.idList
+        )
+      ) {
+        optionsItemDialog.value = false;
+        return;
+      }
+    }
+
+    function duplicateItem(item) {
+      const nameList = countItemsLists.value.find(
+        (list) => list.id == item.idList
+      ).nameList;
+      itemsStore.createNewItem(
+        item.title,
+        item.description,
+        item.tagColor,
+        nameList,
+        item.count ? item.count : 0
+      );
+    }
+
+    const disableButtonEditItem = computed(() => {
+      return (
+        itemToEdit.value.title == oldItem.value.title &&
+        itemToEdit.value.description == oldItem.value.description &&
+        (itemToEdit.value.newList?.id == oldItem.value.idList ||
+          itemToEdit.value.newList == oldItem.value.idList)
+      );
     });
 
     return {
@@ -446,6 +605,15 @@ export default defineComponent({
       isNewList,
       dialogCreateNameList,
       continueCreateNewItem,
+      optionsItemDialog,
+      optionsItem,
+      onLeft,
+      itemToEdit,
+      optionChosen,
+      editItem,
+      duplicateItem,
+      oldItem,
+      disableButtonEditItem,
     };
   },
 });
@@ -466,5 +634,11 @@ export default defineComponent({
     word-break: break-word;
     line-height: 16px;
   }
+}
+.no-select {
+  user-select: none;
+  -webkit-user-select: none; /* Para Safari e Chrome */
+  -moz-user-select: none; /* Para Firefox */
+  -ms-user-select: none; /* Para Internet Explorer e Edge */
 }
 </style>

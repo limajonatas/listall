@@ -36,13 +36,50 @@ export const useCountItemsStore = defineStore("everyCountItems", {
   },
 
   actions: {
+    getUniqueTitle(title, tagColor, indexList, index) {
+      // Inicializa o novo título com o título fornecido
+      let newTitle = title;
+      let match;
+      let counter = 1;
+
+      // Continua o loop enquanto houver algum item na lista de dados com o mesmo título e cor de tag
+      while (
+        this.countItemsLists[indexList].data.some(
+          (item, itemIndex) =>
+            // Verifica se o título e a cor da tag são os mesmos
+            item.title === newTitle &&
+            item.tagColor === tagColor &&
+            // E se o índice do item não é o mesmo que o índice do item que está sendo editado
+            // Isso é para evitar que o título do item que está sendo editado seja alterado
+            // se ele já tiver o mesmo título e cor de tag
+            itemIndex !== index
+        )
+      ) {
+        // Verifica se o título já termina com "_<número>"
+        match = newTitle.match(/_(\d+)$/);
+
+        // Se o título já termina com "_<número>", incrementa esse número
+        if (match) {
+          counter = parseInt(match[1]) + 1;
+          newTitle = `${newTitle.slice(0, match.index)}_${counter}`;
+        } else {
+          // Se o título não termina com "_<número>", adiciona "_1" ao título
+          newTitle = `${newTitle}_1`;
+        }
+      }
+
+      // Retorna o novo título
+      return newTitle;
+    },
     initEveryCountItems() {
       this.everyCountItems =
         JSON.parse(localStorage.getItem("everyCountItems")) || [];
       this.concatItems(); // Atualiza everyCountItems
       this.saveItemsToLocalStorage(); // Salve os dados no localStorage após cada alteração
     },
-    createNewItem(title, description, tagColor, nameList) {
+    createNewItem(title, description, tagColor, nameList, count, editItem) {
+      title = title.toUpperCase();
+
       //verifica se já existe uma lista com a cor fornecida
       let index = this.countItemsLists.findIndex(
         (list) => list.tagColor === tagColor
@@ -66,26 +103,90 @@ export const useCountItemsStore = defineStore("everyCountItems", {
           title,
           description,
           tagColor,
+          menu: false,
         });
       } else {
-        this.countItemsLists[index].data.push({
-          type: "count",
-          id: this.countItemsLists[index].data.length + 1,
-          idList: this.countItemsLists[index].id,
-          count: 0,
-          title,
-          description,
-          tagColor,
-        });
+        // let newTitle = title;
+        // let match;
+        // let counter = 1;
+
+        // while (
+        //   this.countItemsLists[index].data.some(
+        //     (item) => item.title === newTitle && item.tagColor === tagColor
+        //   )
+        // ) {
+        //   match = newTitle.match(/_(\d+)$/);
+
+        //   //EXEMPLO: se o título for "Item_1" o match será ["_1", "1"] então o titulo será "Item_2"
+        //   if (match) {
+        //     counter = parseInt(match[1]) + 1;
+        //     newTitle = `${newTitle.slice(0, match.index)}_${counter}`;
+        //   } else {
+        //     newTitle = `${newTitle}_1`;
+        //   }
+        // }
+
+        try {
+
+          let newTitle = this.getUniqueTitle(title, tagColor, index, this.countItemsLists[index].data.length);
+          this.countItemsLists[index].data.push({
+            type: "count",
+            id: this.countItemsLists[index].data.length + 1,
+            idList: this.countItemsLists[index].id,
+            count: count ?? 0, //no caso de duplicar um item, o contador é mantido
+            title: newTitle,
+            description,
+            tagColor,
+          });
+
+          if (newTitle !== title) {
+            //o nome pode ja existir ou pode ser uma duplicação
+            if (count > -1) {
+              //se for uma duplicação existira o parametro count
+              Notify.create({
+                message: "Item duplicado com sucesso",
+                color: "positive",
+                icon: "done",
+                position: "top",
+              });
+            } else {
+              Notify.create({
+                message:
+                  "Ja existe um item com esse nome, mas criamos um item com um nome diferente",
+                color: "info",
+                icon: "warning",
+                position: "top",
+              });
+            }
+          } else {
+            Notify.create({
+              message: "Item criado com sucesso",
+              color: "positive",
+              icon: "done",
+              position: "top",
+              timeout: 2000,
+            });
+          }
+        } catch (e) {
+          console.log(e);
+          Notify.create({
+            message: "Não foi possível criar o item",
+            color: "red",
+            icon: "report_problem",
+            position: "top",
+          });
+        }
       }
       this.concatItems();
       this.saveItemsToLocalStorage(); // Salve os dados no localStorage após cada alteração
     },
     createNewList(nameList, tagColor) {
+      //verifica se já existe uma lista com a cor fornecida
       const index = this.countItemsLists.findIndex(
         (list) => list.tagColor === tagColor
       );
       if (index === -1) {
+        //se não existir, cria uma nova lista com a cor fornecida
         const id = this.countItemsLists.length + 1;
         this.countItemsLists.push({
           id: id,
@@ -151,12 +252,7 @@ export const useCountItemsStore = defineStore("everyCountItems", {
       this.saveItemsToLocalStorage();
     },
 
-    editItem(id, idList, title, description, tagColor, changeList) {
-      if (changeList) {
-        const item = this.deleteItem(id, idList);
-        this.createNewItem(title, description, tagColor);
-        return item;
-      }
+    editItem(id, idList, title, description, idNewList) {
       const indexList = this.findList(idList);
       if (indexList === -1) {
         Notify.create({
@@ -180,12 +276,50 @@ export const useCountItemsStore = defineStore("everyCountItems", {
         });
         return null;
       }
-      this.countItemsLists[indexList].data[index].title = title;
-      this.countItemsLists[indexList].data[index].description = description;
-      this.countItemsLists[indexList].data[index].tagColor = tagColor;
+      //edite o item
+      if (idNewList !== idList) {
+        //mude o item de lista
+        const indexNewList = this.findList(idNewList);
+        if (indexNewList === -1) {
+          Notify.create({
+            message: "Não foi possível editar o item",
+            color: "red",
+            icon: "report_problem",
+            position: "top",
+          });
+          return null;
+        }
+
+        const item = this.deleteItem(id, idList); //exclua o item da lista antiga
+        //crie um novo item na nova lista
+        this.createNewItem(
+          title,
+          description,
+          //color vai ser da lista nova
+          this.countItemsLists[indexNewList].tagColor,
+          this.countItemsLists[indexNewList].nameList,
+          item.count
+        );
+      } else {
+        let uniqueTitle = this.getUniqueTitle(
+          title,
+          this.countItemsLists[indexList].tagColor,
+          indexList
+        );
+        this.countItemsLists[indexList].data[index].title = uniqueTitle;
+        this.countItemsLists[indexList].data[index].description = description;
+      }
 
       this.concatItems();
       this.saveItemsToLocalStorage(); // Salve os dados no localStorage após cada alteração
+      Notify.create({
+        message: "Item editado com sucesso",
+        color: "positive",
+        icon: "done",
+        position: "top",
+        timeout: 2000,
+      });
+      return true;
     },
     deleteItem(id, idList) {
       const indexList = this.findList(idList);
@@ -279,6 +413,7 @@ export const useCountItemsStore = defineStore("everyCountItems", {
       }
     },
     concatItems() {
+      //concatena todos os itens de todas as listas
       const concatenatedItemsLists = this.countItemsLists.reduce(
         (acc, list) => {
           return acc.concat(list.data);
