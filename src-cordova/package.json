@@ -14,6 +14,7 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "cordova-android": "^12.0.1",
+    "cordova-plugin-email": "^1.2.7",
     "cordova-plugin-vibration": "^3.1.1"
   },
   "cordova": {
@@ -21,10 +22,12 @@
       "android"
     ],
     "plugins": {
-      "cordova-plugin-vibration": {}
+      "cordova-plugin-vibration": {},
+      "cordova-plugin-email": {}
     }
   },
   "dependencies": {
+    "cordova-plugin-email-composer": "^0.10.1",
     "pinia-plugin-persistedstate": "^3.2.1"
   }
 }

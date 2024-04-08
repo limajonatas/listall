@@ -413,6 +413,8 @@ export default defineComponent({
         ? countItemsLists.value[countItemsLists.value.length - 1]
         : null
     );
+    const itemToEdit = ref(null);
+    const oldItem = ref(null);
 
     watch(
       () => dialog.value,
@@ -423,6 +425,9 @@ export default defineComponent({
       }
     );
 
+    /**
+     * Cria um novo item
+     */
     const createNewItem = () => {
       if (!titleNewItem.value) {
         Notify.create({
@@ -455,6 +460,9 @@ export default defineComponent({
       continueCreateNewItem();
     };
 
+    /**
+     * Continua a criação de um novo item
+     */
     function continueCreateNewItem() {
       dialogCreateNameList.value = false;
       itemsStore.createNewItem(
@@ -464,18 +472,12 @@ export default defineComponent({
         nameNewList.value
       );
 
-      // Notify.create({
-      //   message: "Item criado com sucesso",
-      //   color: "positive",
-      //   icon: "check_circle",
-      //   position: "top",
-      //   timeout: 2000,
-      // });
       titleNewItem.value = "";
       descriptionNewItem.value = "";
       listForNewItem.value =
         countItemsLists.value[countItemsLists.value.length - 1];
     }
+
     function increment(item) {
       itemsStore.incrementCount(item.id, item.idList);
     }
@@ -518,9 +520,6 @@ export default defineComponent({
       }
     }
 
-    const itemToEdit = ref(null);
-    const oldItem = ref(null);
-
     function onLeft({ reset }, item) {
       itemToEdit.value = { ...item };
       itemToEdit.value.newList = item.idList;
@@ -558,18 +557,11 @@ export default defineComponent({
       });
     }
 
-    // Carregar os itens ao iniciar o componente
     onMounted(() => {
-      // if (itemsStore.everyCountItems.length === 0) {
-      //   itemsStore.everyCountItems = JSON.parse(localStorage.getItem("everyCountItems")) || [];
-      // }
       itemsStore.initEveryCountItems();
     });
+
     const optionsItemDialog = ref(false);
-    const optionsItem = [
-      { id: 1, name: "Editar" },
-      { id: 2, name: "Duplicar" },
-    ];
     const optionChosen = ref(null);
 
     function editItem() {
@@ -628,7 +620,6 @@ export default defineComponent({
       dialogCreateNameList,
       continueCreateNewItem,
       optionsItemDialog,
-      optionsItem,
       onLeft,
       itemToEdit,
       optionChosen,
@@ -640,6 +631,7 @@ export default defineComponent({
   },
 });
 </script>
+
 <style lang="scss" scoped>
 .item-in-list {
   display: grid;
