@@ -33,7 +33,8 @@ npm run format
   <li>Na janela que se abre, clique em "Variáveis de ambiente...".</li>
   <li>Na seção "Variáveis de usuário", clique em "Novo..." para adicionar uma nova variável de ambiente.</li>
   <li>Digite o nome da variável (por exemplo, <code>ANDROID_HOME</code>) e o valor (o caminho para o diretório onde o Android SDK está instalado).</li>
-  <li>Repita os passos 3 e 4 para cada variável de ambiente que você precisa adicionar (<code>ANDROID_SDK_ROOT</code>, <code>JAVA_HOME</code>, <code>GRADLE_HOME</code>, etc.).</li>
+  <li>Repita os passos 3 e 4 para cada variável de ambiente que você precisa adicionar (<code>ANDROID_SDK_ROOT</code>, <code>JAVA_HOME</code>).</li>
+  <li>Adicionar ao path do sistema o diretorio do <code>grandle</code> (pasta bin) assim como <code>%ANDROID_SDK_ROOT%\platform-tools</code> e <code>%ANDROID_SDK_ROOT%\tools</code> se necessário </li>
 </ol>
 
 <h2>Gerando a versão de depuração</h2>
@@ -56,7 +57,7 @@ cordova build android
 <ul>
   <li>Editar item da lista</li>
   <li>Configurações</li>
-  <li>Contato para dar feedback<li>
+  <li>Contato para dar feedback</li>
 </ul>
 
 <h2>Download do APK DEBUG</h2>
