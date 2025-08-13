@@ -1,489 +1,612 @@
 <template>
-  <q-page padding class="q-gutter-y-md">
-    <!-- <div class="text-center" v-if="everyCountItems.length == 0">
-      <p class="text-subtitle1">
-        <strong> Bem-vindo ao ListAll !</strong> <br />
-        Esta é a página Inicial <br />
-        comece criando um novo item para contar
-      </p>
-    </div> -->
-
+  <q-page class="q-pa-sm">
     <q-card>
-      <q-form :submit="createNewItem" class="q-pa-sm">
-        Novo Item
-        <div style="display: flex; flex-direction: row; gap: 8px">
-          <div class="full-width">
-            <q-input
-              class="full-width"
-              filled
+      <q-form :submit="createOrUpdateItem" class="q-pa-sm">
+        <div class="flex row justify-between q-py-xs">
+          <span
+            v-text="editingItem ? 'Editar Item' : 'Novo Item'"
+            class="text-bold text-h6"
+            :class="editingItem ? 'text-orange' : 'text-primary'"
+          />
+          <div>
+            <q-btn
+              label="Cancelar"
+              color="negative"
               dense
-              v-model="titleNewItem"
-              label="Título"
-              lazy-rules
-              :rules="[(val) => val.length <= 30 || 'Máximo de 30 caracteres']"
-              maxlength="30"
+              outline
+              v-if="editingItem"
+              @click="resetEdit"
             />
-            <q-input
-              class="full-width"
-              filled
+            <q-btn
+              v-else
+              :icon="
+                newOrEditItemCard ? 'keyboard_arrow_up' : 'keyboard_arrow_down'
+              "
+              color="primary"
               dense
-              v-model="descriptionNewItem"
-              label="Descrição"
+              flat
+              @click="newOrEditItemCard = !newOrEditItemCard"
             />
-          </div>
-          <div class="column justify-between items-center">
-            <!-- TAG -->
-            <q-icon
-              :name="listForNewItem?.tagColor ? 'bookmark' : 'bookmark_border'"
-              size="lg"
-              :style="`color: ${
-                listForNewItem ? listForNewItem.tagColor : '#00000'
-              }`"
-              @click="dialog = true"
-            />
-            <!--CREATE NEW ITEM-->
-            <q-btn type="submit" color="primary" icon="add" />
           </div>
         </div>
+
+        <q-slide-transition>
+          <div class="flex row" v-show="newOrEditItemCard">
+            <div class="col-12">
+              <!--TITULO-->
+              <q-input
+                class="full-width"
+                filled
+                dense
+                v-model="titleNewItem"
+                label="Título"
+                lazy-rules
+                :rules="[
+                  (val) => val.length <= 40 || 'Máximo de 40 caracteres',
+                ]"
+              />
+              <!--DESCRICAO-->
+              <q-input
+                class="full-width"
+                filled
+                dense
+                v-model="descriptionNewItem"
+                label="Descrição (opcional)"
+              />
+
+              <!--COUNT-->
+              <q-input
+                v-if="listType == 'count'"
+                class="full-width q-mt-md"
+                filled
+                dense
+                v-model="countStartNewItem"
+                type="number"
+                label="Iniciar com"
+              />
+            </div>
+
+            <!--TAGs-->
+            <div class="flex row">
+              <div
+                v-for="tag in tagsSelectedData"
+                :key="tag.id"
+                style="padding: 2px"
+              >
+                <q-badge
+                  :style="{
+                    backgroundColor: tag.color,
+                    color: getContrastColor(tag.color),
+                  }"
+                >
+                  # {{ tag.name }}
+                </q-badge>
+              </div>
+            </div>
+
+            <!--LIST TYPE-->
+            <div
+              class="col-12 row flex items-center q-mt-md"
+              :class="
+                $q.screen.lt.sm
+                  ? 'justify-between'
+                  : 'justify-end q-gutter-x-sm'
+              "
+            >
+              <q-btn-group push rounded>
+                <q-btn
+                  :dense="$q.screen.lt.sm"
+                  label="to-do"
+                  :color="listType == 'to-do' ? 'primary' : undefined"
+                  @click="listType = 'to-do'"
+                  style="border-right: 1px solid #ccc"
+                  :icon="$q.screen.lt.sm ? undefined : 'checklist'"
+                />
+                <q-btn
+                  :dense="$q.screen.lt.sm"
+                  label="simples"
+                  :color="listType == 'simples' ? 'primary' : undefined"
+                  @click="listType = 'simples'"
+                  style="border-right: 1px solid #ccc"
+                  :icon="$q.screen.lt.sm ? undefined : 'list'"
+                />
+                <q-btn
+                  :dense="$q.screen.lt.sm"
+                  label="contador"
+                  :color="listType == 'count' ? 'primary' : undefined"
+                  @click="listType = 'count'"
+                  :icon="$q.screen.lt.sm ? undefined : 'exposure_plus_1'"
+                />
+              </q-btn-group>
+              <!-- TAG -->
+              <q-btn
+                icon="tag"
+                @click="
+                  dialogTags = true;
+                  createNewTag = false;
+                  newTagTitle = undefined;
+                "
+              />
+              <!--CREATE NEW ITEM-->
+              <q-btn
+                type="submit"
+                :color="editingItem ? 'orange' : 'primary'"
+                :icon="editingItem ? 'edit' : 'add'"
+                :label="$q.screen.lt.sm ? '' : editingItem ? 'Editar' : 'Criar'"
+              />
+            </div>
+          </div>
+        </q-slide-transition>
       </q-form>
     </q-card>
 
-    <!-- LISTA DE ITENS -->
-    <div v-if="everyCountItems.length > 0">
-      Para excluir um item, arraste-o para a direita
-    </div>
-    <q-list
-      bordered
-      class="rounded-borders"
-      separator
-      v-if="everyCountItems.length > 0"
+    <q-card class="q-mt-sm">
+      <div class="q-pa-xs">
+        <q-tabs
+          dense
+          v-model="tab"
+          class="text-teal rounded-borders"
+          inline-label
+          align="left"
+          indicator-color="primary"
+          active-color="white"
+          active-bg-color="primary"
+        >
+          <q-tab
+            :name="t.name"
+            :icon="t.icon"
+            :label="t.label"
+            v-for="t in tabs"
+            :key="t.name"
+          />
+        </q-tabs>
+      </div>
+    </q-card>
+
+    <q-tab-panels
+      v-model="tab"
+      animated
+      class="shadow-2 rounded-borders q-mt-sm"
     >
-      <q-slide-item
-        @right="onRight($event, item)"
-        @left="onLeft($event, item)"
-        right-color="red"
-        v-for="item in everyCountItems"
-        :key="item.id"
+      <q-tab-panel
+        v-for="t in tabs"
+        :key="t.name"
+        :name="t.name"
+        class="q-pa-xs"
       >
-        <template v-slot:right>
-          <q-icon name="delete" />
-        </template>
-        <template v-slot:left>
-          <q-icon name="edit" />
-        </template>
-        <template v-slot:default>
-          <q-card class="q-pl-lg q-py-sm q-pr-sm no-select">
-            <q-menu
-              anchor="center middle"
-              self="top middle"
-              v-model="item.menu"
-              context-menu
-              @show="item.menu = true"
-              @hide="item.menu = false"
-              style="width: 130px"
-            >
-              <q-list>
-                <q-item
-                  clickable
-                  v-close-popup
-                  @click="
-                    () => {
-                      optionsItemDialog = true;
-                      itemToEdit = { ...item };
-                      oldItem = { ...item };
-                      itemToEdit.newList = item.idList;
-                    }
-                  "
-                >
-                  <q-item-section>
-                    <q-icon name="edit" />
-                  </q-item-section>
-                  <q-item-section>Editar</q-item-section>
-                </q-item>
-                <q-item
-                  clickable
-                  v-close-popup
-                  @click="() => duplicateItem(item)"
-                >
-                  <q-item-section>
-                    <q-icon name="content_copy" />
-                  </q-item-section>
-                  <q-item-section>Duplicar</q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
-            <q-icon
-              name="bookmark"
-              class="absolute-top-left"
-              :style="`color: ${item.tagColor}`"
-              size="sm"
-            />
-            <div class="item-in-list">
-              <div class="full-width">
-                <div class="text-bold text-subtitle1 text-uppercase">
-                  {{ item.title }}
-                </div>
-                <div v-show="item.description" class="text-caption">
-                  {{ item.description }}
-                </div>
-              </div>
-              <div class="text-h3 q-px-sm row items-center justify-center">
-                {{ item.count }}
-              </div>
-              <div class="column q-gutter-y-sm">
-                <q-btn
-                  icon="keyboard_arrow_up"
-                  color="secondary"
-                  @mousedown="increment(item)"
-                />
-                <q-btn
-                  icon="keyboard_arrow_down"
-                  color="grey"
-                  :disable="item.count == 0"
-                  @mousedown="decrement(item)"
-                />
-              </div>
-            </div>
-          </q-card>
-        </template>
-      </q-slide-item>
-    </q-list>
-
-    <q-dialog v-model="dialog">
-      <q-card class="full-width">
-        <q-card-section>
-          <!--NOVA LISTA-->
-          <div v-if="countItemsLists.length == 0">
-            Crie sua primeira lista
-            <q-form class="q-gutter-y-sm">
-              <q-input label="Nome" v-model="nameNewList" outlined clearable />
-              <q-input
-                filled
-                v-model="color"
-                class="my-input"
-                lazy-rules
-                :rules="[(val) => !!val || 'Cor é obrigatória']"
-              >
-                <template v-slot:append>
-                  <q-icon name="colorize" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-color v-model="color" />
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
-              <q-card-actions align="right">
-                <q-btn
-                  label="Cancelar"
-                  color="negative"
-                  flat
-                  @click="dialog = false"
-                />
-                <q-btn
-                  type="submit"
-                  color="primary"
-                  label="Criar Lista"
-                  icon="add"
-                  @click="createList()"
-                />
-              </q-card-actions>
-            </q-form>
-          </div>
-
-          <!-- LISTA DE LISTAS-->
-          <div v-else class="q-gutter-y-md">
-            <q-select
-              v-if="!isNewList"
-              outlined
-              label="Listas"
-              clearable
-              v-model="listForNewItem"
-              :options="countItemsLists"
-              :option-label="
-                (list) => `${list.id} - ${list.nameList} - ${list.tagColor} `
-              "
-            >
-              <template v-slot:no-option>
-                <q-item>
-                  <q-item-section class="text-grey">
-                    <q-item-label class="text-grey">
-                      Nenhuma lista encontrada
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-              </template>
-              <template v-slot:option="props">
-                <q-item v-bind="props.itemProps">
-                  <q-item-section avatar>
-                    <q-icon
-                      name="bookmark"
-                      :style="`color: ${props.opt.tagColor}`"
-                    />
-                  </q-item-section>
-                  <q-item-section>{{ props.opt.nameList }}</q-item-section>
-                </q-item>
-              </template>
-            </q-select>
-
-            <div>
-              <q-form v-if="isNewList" class="q-gutter-y-sm">
-                Nova Lista
-                <q-input label="Nome" v-model="nameNewList" outlined> </q-input>
-                <q-input
-                  filled
-                  v-model="color"
-                  class="my-input"
-                  lazy-rules
-                  :rules="[(val) => !!val || 'Cor é obrigatória']"
-                >
-                  <template v-slot:append>
-                    <q-icon name="colorize" class="cursor-pointer">
-                      <q-popup-proxy
-                        cover
-                        transition-show="scale"
-                        transition-hide="scale"
-                      >
-                        <q-color v-model="color" />
-                      </q-popup-proxy>
-                    </q-icon>
-                  </template>
-                </q-input>
-                <q-card-actions align="right">
-                  <q-btn
-                    label="Cancelar"
-                    color="negative"
-                    flat
-                    @click="isNewList = false"
-                  />
-                  <q-btn
-                    type="submit"
-                    color="primary"
-                    icon="add"
-                    label="Criar Lista"
-                    @click.prevent="createList()"
-                  />
-                </q-card-actions>
-              </q-form>
-              <q-card-actions align="right" v-if="!isNewList">
-                <q-btn
-                  label="Nova Lista"
-                  flat
-                  icon="add"
-                  color="secondary"
-                  @click="isNewList = true"
-                />
-                <q-btn
-                  v-if="listForNewItem"
-                  label="Confirmar"
-                  color="primary"
-                  @click="dialog = false"
-                />
-              </q-card-actions>
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
-
-    <!--CREATE FIRST LIST-->
-    <q-dialog v-model="dialogCreateNameList">
-      <q-card>
-        <q-card-section class="q-gutter-y-sm">
-          Vamos criar sua primeira lista de items. <br />
-          Não quer dá um nome e uma cor para essa nova lista?
-          <q-input label="Nome" v-model="nameNewList" outlined clearable />
-          <q-input
-            filled
-            v-model="color"
-            class="my-input"
-            lazy-rules
-            label="Cor"
+        <!--LIST FOR LARGE SCREEN -->
+        <div class="flex row" v-if="allItens.length > 0 && $q.screen.gt.sm">
+          <div
+            v-for="item in allItens"
+            :key="item.id"
+            class="q-pa-xs col-xs-12 col-md-6 col-lg-4"
           >
-            <template v-slot:append>
-              <q-icon name="colorize" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
-                  <q-color v-model="color" />
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn
-            label="Não"
-            color="primary"
-            flat
-            @click="continueCreateNewItem()"
-          />
-          <q-btn
-            label="Criar"
-            color="primary"
-            flat
-            @click="continueCreateNewItem()"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+            <card-item
+              :item="item"
+              :is-todo="tab == 'to-do'"
+              :is-count="tab == 'count'"
+              @check="checkItem"
+              @increment="increment"
+              @decrement="decrement"
+              @edit="editItem"
+              @duplicate="duplicateItem"
+            />
+          </div>
+        </div>
 
-    <!--EDIT ITEM-->
-    <q-dialog v-model="optionsItemDialog">
+        <!--LIST FOR SMALL SCREEN-->
+        <div v-else-if="allItens.length > 0 && !$q.screen.gt.sm">
+          <div class="q-pa-xs text-center">
+            Arraste para esquerda para editar e para direita para excluir
+          </div>
+          <q-list
+            bordered
+            class="rounded-borders"
+            separator
+            :style="`max-height: calc(100vh - ${
+              newOrEditItemCard ? '450px' : '300px'
+            }); overflow-y: scroll`"
+          >
+            <q-slide-item
+              @right="onRight($event, item)"
+              @left="onLeft($event, item)"
+              right-color="red"
+              v-for="item in allItens"
+              :key="item.id"
+            >
+              <template v-slot:right>
+                <q-icon name="delete" />
+              </template>
+              <template v-slot:left>
+                <q-icon name="edit" />
+              </template>
+              <template v-slot:default>
+                <card-item
+                  :item="item"
+                  :is-todo="tab == 'to-do'"
+                  :is-count="tab == 'count'"
+                  @check="checkItem"
+                  @increment="increment"
+                  @decrement="decrement"
+                  @edit="editItem"
+                  @duplicate="duplicateItem"
+                />
+              </template>
+            </q-slide-item>
+          </q-list>
+        </div>
+        <div class="col-xs-12 q-pa-sm text-subtitle1 text-center" v-else>
+          Nenhum item criado!
+        </div>
+      </q-tab-panel>
+    </q-tab-panels>
+
+    <!--list TAGS-->
+    <q-dialog v-model="dialogTags" @hide="createNewTag = false">
       <q-card>
-        <q-card-section>
-          <label class="text-bold text-subtitle1">Editar Item</label>
-          <q-form @submit.prevent="editItem()" class="q-gutter-y-sm">
-            <q-input
-              class="full-width"
-              v-model="itemToEdit.title"
-              label="Título"
-              outlined
+        <q-card-section style="min-width: 300px">
+          <div
+            class="text-primary text-subtitle1 text-bold full-width flex row justify-between"
+          >
+            <span v-text="'TAGs'" class="q-mr-xl" />
+            <q-btn class="q-pa-none" icon="close" flat dense v-close-popup />
+          </div>
+          <div class="flex column">
+            <span v-if="tags.length <= 0" v-text="'Sem TAGs'" />
+
+            <q-btn
+              v-if="!createNewTag"
+              class="q-mt-xs"
+              color="primary"
+              label="Criar Tag"
+              @click="
+                createNewTag = true;
+                colorTag = randomColor();
+              "
             />
-            <q-input
-              class="full-width"
-              v-model="itemToEdit.description"
-              label="Descrição"
-              outlined
-            />
-            <div class="row no-wrap">
-              <q-select
-                class="full-width"
-                v-model="itemToEdit.newList"
-                label="Lista"
-                :options="countItemsLists"
-                :option-label="
-                  (list) => `${list.id} - ${list.nameList} - ${list.tagColor} `
-                "
-                option-value="id"
-                map-options
-                outlined
-              />
-            </div>
-            <q-card-actions align="right">
-              <q-btn
-                label="Cancelar"
-                color="negative"
-                flat
-                @click="optionsItemDialog = false"
-              />
-              <q-btn
-                label="Salvar"
-                color="primary"
-                type="submit"
-                :disable="disableButtonEditItem"
-              />
-            </q-card-actions>
-          </q-form>
+
+            <!--CREATE NEW TAG-->
+            <q-slide-transition>
+              <q-form
+                class="shadow-2 q-pa-md column"
+                v-show="createNewTag"
+                @submit="createNewTagFunction"
+              >
+                <q-input
+                  class="full-width"
+                  filled
+                  dense
+                  v-model="newTagTitle"
+                  label="Nova Tag"
+                  lazy-rules
+                  :rules="[
+                    (val) => val.length <= 20 || 'Máximo de 20 caracteres',
+                  ]"
+                  maxlength="20"
+                />
+                <div class="flex row no-wrap items-center">
+                  <q-icon
+                    :style="`color: ${colorTag}`"
+                    name="tag"
+                    size="lg"
+                    class="q-mb-lg"
+                  />
+                  <q-input
+                    label="Cor"
+                    dense
+                    filled
+                    v-model="colorTag"
+                    class="my-input"
+                    lazy-rules
+                    :rules="[(val) => !!val || 'Cor é obrigatória']"
+                  >
+                    <template v-slot:append>
+                      <q-icon name="colorize" class="cursor-pointer">
+                        <q-popup-proxy
+                          cover
+                          transition-show="scale"
+                          transition-hide="scale"
+                        >
+                          <q-color v-model="colorTag" />
+                        </q-popup-proxy>
+                      </q-icon>
+                    </template>
+                  </q-input>
+                </div>
+                <q-btn
+                  class="q-mt-xs"
+                  color="primary"
+                  label="Criar"
+                  type="submit"
+                />
+              </q-form>
+            </q-slide-transition>
+
+            <!--LIST TAGS-->
+            <q-list
+              style="max-height: 300px; overflow-y: scroll"
+              bordered
+              class="rounded-borders q-mt-md"
+              separator
+              v-if="tags.length > 0"
+              dense
+            >
+              <q-item
+                clickable
+                v-ripple
+                v-for="tag in tags"
+                :key="tag.id"
+                dense
+              >
+                <q-item-section avatar>
+                  <q-icon name="tag" :style="`color: ${tag.color}`" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ tag.name }}</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-checkbox v-model="tagsSelected" :val="tag.id" />
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </div>
         </q-card-section>
       </q-card>
     </q-dialog>
   </q-page>
 </template>
 
-<script>
-import { defineComponent, ref, onMounted, watch, computed } from "vue";
-import { Notify, Dialog } from "quasar";
-import { useCountItemsStore } from "src/stores/items-count-store";
+<script lang="js">
+import { computed, defineAsyncComponent, defineComponent, onMounted, ref } from 'vue'
+import { counterService, listService, tagService, todoService } from 'src/db/dbServices'
+import { Dialog, Notify } from 'quasar';
 import { useConfig } from "src/stores/config-store";
-import { storeToRefs } from "pinia";
+import { storeToRefs } from 'pinia';
 import { randomColor } from "src/utils/utils";
 
 export default defineComponent({
-  name: "IndexPage",
+  name: 'PageName',
   setup() {
-    const itemsStore = useCountItemsStore();
+
     const configStore = useConfig();
     const { confirmDeleteItem } = storeToRefs(configStore);
-    const { everyCountItems, countItemsLists } = storeToRefs(itemsStore);
-    const titleNewItem = ref("");
-    const descriptionNewItem = ref("");
-    const nameNewList = ref("");
-    const color = ref("#1976d2");
-    const dialog = ref(false);
-    const dialogCreateNameList = ref(false);
-    const isNewList = ref(false);
-    const listForNewItem = ref(
-      countItemsLists.value.length > 0
-        ? countItemsLists.value[countItemsLists.value.length - 1]
-        : null
-    );
-    const itemToEdit = ref(null);
-    const oldItem = ref(null);
 
-    watch(
-      () => dialog.value,
-      () => {
-        if (!dialog.value) {
-          isNewList.value = false;
+    const listType = ref('to-do')
+
+    const titleNewItem = ref('');
+    const descriptionNewItem = ref('');
+    const countStartNewItem = ref(0);
+
+    const dialogTags = ref(false)
+    const tags = ref([])
+    const tagsSelected = ref([])
+    const tagsSelectedData = computed(() => {
+      return tagsSelected.value.map((id) => {
+        return tags.value.find((tag) => tag.id === id)
+      })
+    })
+    const newTagTitle = ref();
+    const colorTag = ref(randomColor());
+    const createNewTag = ref(false);
+
+    const todoList = ref([])
+    const simplesList = ref([])
+    const countList = ref([])
+
+    const tab = ref('to-do')
+    const tabs = ref([
+      { label: 'To-Do', name: 'to-do', icon: 'checklist' },
+      { label: 'Simples', name: 'simples', icon: 'list' },
+      { label: 'Contagem', name: 'count', icon: 'exposure_plus_1' },
+    ])
+
+
+    const allItens = computed(() => {
+      if (tab.value === 'to-do') {
+        return todoList.value
+      } else if (tab.value === 'simples') {
+        return simplesList.value
+      } else if (tab.value === 'count') {
+        return countList.value
+      }
+      return []
+    })
+
+    function createNewTagFunction() {
+      if (newTagTitle.value === '' || newTagTitle.value === null || newTagTitle.value === undefined) {
+        Notify.create({
+          message: "Tag inválida",
+          color: "negative",
+          icon: "error",
+          position: "top",
+          timeout: 2000,
+        })
+        return;
+      }
+
+      const newTag = {
+        name: newTagTitle.value,
+        color: colorTag.value,
+      }
+      tagService.add(newTag).then(() => {
+        getAllTags();
+        createNewTag.value = false;
+        newTagTitle.value = undefined;
+        Notify.create({
+          message: "Tag criada com sucesso",
+          color: "primary",
+          icon: "done",
+          position: "top",
+          timeout: 2000,
+        });
+      }).catch((error) => {
+        const message = error.message;
+        console.error(message);
+        Notify.create({
+          message: message,
+          color: "negative",
+          icon: "error",
+          position: "top",
+          timeout: 2000,
+        });
+      })
+
+    }
+
+    function getAllTags() {
+      tagService.getAll().then((tagsResponse) => {
+        tags.value = tagsResponse
+      })
+    }
+
+    function getSimplesList() {
+      listService.getAll().then((listResponse) => {
+        simplesList.value = listResponse
+      })
+    }
+
+    function getCountList() {
+      counterService.getAll().then((countResponse) => {
+        countList.value = countResponse
+      })
+    }
+
+    function getTodoList() {
+      todoService.getAll().then((todoResponse) => {
+        todoList.value = todoResponse
+      })
+    }
+
+    function getAllLists() {
+      getSimplesList();
+      getCountList();
+      getTodoList();
+    }
+
+    function getContrastColor(hex) {
+      hex = hex.replace('#', '')
+
+      if (hex.length === 3) {
+        hex = hex.split('').map(c => c + c).join('')
+      }
+
+      const r = parseInt(hex.substring(0, 2), 16)
+      const g = parseInt(hex.substring(2, 4), 16)
+      const b = parseInt(hex.substring(4, 6), 16)
+
+      // fórmula de luminosidade relativa
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+
+      return luminance > 0.5 ? 'black' : 'white'
+    }
+
+    async function createOrUpdateItem() {
+      if (!titleNewItem.value?.trim()) {
+        Notify.create({ message: "Título inválido", color: "negative", icon: "error", position: "top", timeout: 2000 });
+        return;
+      }
+
+      const newType = listType.value; // tipo selecionado no form
+      const originalType = editingItem.value ? editingItemData.value.type : null;
+
+      if (!newType) {
+        Notify.create({ message: "Selecione um tipo de item", color: "negative", icon: "error", position: "top", timeout: 2000 });
+        return;
+      }
+
+      // dados base do item
+      let itemData = {
+        title: titleNewItem.value,
+        description: descriptionNewItem.value,
+        tags: tagsSelected.value,
+        history: [],
+        type: newType
+      };
+
+      // adicionar atributos específicos por tipo
+      if (newType === 'to-do') itemData.check = editingItemData.value?.check ?? false;
+      if (newType === 'count') itemData.value = countStartNewItem.value ?? 0;
+
+      // função para pegar o serviço certo
+      const getService = (type) => {
+        if (type === 'to-do') return todoService;
+        if (type === 'simples') return listService;
+        if (type === 'count') return counterService;
+      };
+
+      try {
+        if (editingItem.value) {
+          if (originalType === newType) {
+            // mesmo tipo, atualiza normalmente
+            await getService(newType).update(editingItemData.value.id, itemData);
+          } else {
+            // tipo diferente, remove da lista antiga e adiciona na nova
+            await getService(originalType).remove(editingItemData.value.id);
+            await getService(newType).add(itemData);
+          }
+        } else {
+          // criação normal
+          await getService(newType).add(itemData);
         }
-      }
-    );
 
-    /**
-     * Cria um novo item
-     */
-    const createNewItem = () => {
-      if (!titleNewItem.value) {
+        // reset de campos
+        titleNewItem.value = '';
+        descriptionNewItem.value = '';
+        tagsSelected.value = [];
+        if (newType === 'count') countStartNewItem.value = 0;
+        editingItem.value = false;
+        editingItemData.value = null;
+
+        //atualiza lista da aba atual
+        getAllLists();
+
         Notify.create({
-          message: "Título é obrigatório",
-          color: "negative",
-          icon: "error",
+          message: editingItem.value ? "Item atualizado com sucesso" : "Item criado com sucesso",
+          color: "primary",
+          icon: "done",
           position: "top",
           timeout: 2000,
         });
-        return;
-      }
 
-      //Se não houver nenhuma lista criada, cria uma lista
-      if (countItemsLists.value.length == 0) {
-        dialogCreateNameList.value = true;
-        return;
+      } catch (error) {
+        console.error(error.message);
+        Notify.create({ message: error.message, color: "negative", icon: "error", position: "top", timeout: 2000 });
       }
-      if (!listForNewItem.value) {
-        Notify.create({
-          message: "Selecione uma lista!",
-          color: "negative",
-          icon: "error",
-          position: "top",
-          timeout: 2000,
+    }
+
+
+    const checkItem = ({ id, check }) => {
+      todoService.updateCheck(id, check)
+        .then(() => {
+          Notify.create({
+            message: check ? "Tarefa concluída" : "Tarefa pendente",
+            color: check ? "primary" : "warning",
+            icon: check ? "done" : "warning",
+            position: "top",
+            timeout: 2000,
+          });
+          getTodoList();
+        })
+        .catch((error) => {
+          console.error(error.message);
+          Notify.create({
+            message: error.message,
+            color: "negative",
+            icon: "error",
+            position: "top",
+            timeout: 2000,
+          });
         });
-        dialog.value = true;
-        return;
-      }
-
-      continueCreateNewItem();
     };
 
-    /**
-     * Continua a criação de um novo item
-     */
-    function continueCreateNewItem() {
-      dialogCreateNameList.value = false;
-      itemsStore.createNewItem(
-        titleNewItem.value,
-        descriptionNewItem.value,
-        listForNewItem.value ? listForNewItem.value?.tagColor : color.value,
-        nameNewList.value
-      );
-
-      titleNewItem.value = "";
-      descriptionNewItem.value = "";
-      listForNewItem.value =
-        countItemsLists.value[countItemsLists.value.length - 1];
+    const increment = (item) => {
+      counterService.incrementCounter(item.id);
+      item.value++;
     }
 
-    function increment(item) {
-      itemsStore.incrementCount(item.id, item.idList);
-    }
-
-    function decrement(item) {
-      itemsStore.decrementCount(item.id, item.idList);
+    const decrement = (item) => {
+      counterService.decrementCounter(item.id);
+      item.value--;
     }
 
     function onRight({ reset }, item) {
@@ -505,154 +628,220 @@ export default defineComponent({
     }
 
     function deleteItem(item) {
-      const itemDeleted = itemsStore.deleteItem(item.id, item.idList);
-      if (!itemDeleted) return;
-      Notify.create({
-        message: `O item ${itemDeleted.title} foi excluído com sucesso`,
-        color: "warning",
-        icon: "delete",
-        position: "top",
-        timeout: 2000,
-      });
+      if (tab.value === 'to-do') {
+        todoService.remove(item.id).then(() => {
+          Notify.create({
+            message: "Tarefa excluída com sucesso",
+            color: "primary",
+            icon: "delete",
+            position: "top",
+            timeout: 2000,
+          });
+          getTodoList();
+        }).catch((error) => {
+          const message = error.message;
+          console.error(message);
+          Notify.create({
+            message: message,
+            color: "negative",
+            icon: "error",
+            position: "top",
+            timeout: 2000,
+          });
 
-      if (navigator && navigator.vibrate) {
-        navigator.vibrate(50);
+        })
+      } else if (tab.value === 'simples') {
+        listService.remove(item.id).then(() => {
+          Notify.create({
+            message: "Item excluído com sucesso",
+            color: "primary",
+            icon: "delete",
+            position: "top",
+            timeout: 2000,
+          });
+          getSimplesList();
+        }).catch((error) => {
+          const message = error.message;
+          console.error(message);
+          Notify.create({
+            message: message,
+            color: "primary",
+            icon: "error",
+            position: "top",
+            timeout: 2000,
+          });
+        })
+      } else if (tab.value === 'count') {
+        counterService.remove(item.id).then(() => {
+          Notify.create({
+            message: "Item excluído com sucesso",
+            color: "warning",
+            icon: "delete",
+            position: "top",
+            timeout: 2000,
+          });
+          getCountList();
+        }).catch((error) => {
+          const message = error.message;
+          console.error(message);
+          Notify.create({
+            message: message,
+            color: "negative",
+            icon: "error",
+            position: "top",
+            timeout: 2000,
+          });
+        })
       }
+      if (navigator && navigator.vibrate) {
+        navigator.vibrate(40);
+      }
+    }
+
+    const editingItem = ref(false);
+    const editingItemData = ref();
+
+    const editItem = (item) => {
+      listType.value = tab.value; // to-do / simples / count
+      titleNewItem.value = item.title;
+      descriptionNewItem.value = item.description;
+      tagsSelected.value = item.tags;
+      if (item.value !== undefined) countStartNewItem.value = item.value;
+
+      editingItem.value = true;
+      newOrEditItemCard.value = true; //open item card edit
+      editingItemData.value = {...item};
     }
 
     function onLeft({ reset }, item) {
-      itemToEdit.value = { ...item };
-      itemToEdit.value.newList = item.idList;
-      oldItem.value = { ...item };
-      optionsItemDialog.value = true;
+      editItem(item);
       reset();
     }
 
-    function createList() {
-      //para saber se o código é um hexadecimal válido verifica se o código possui 6 caracteres e tem # no inicio
-      if (color.value.length == 7 && color.value[0] == "#") {
-        const success = itemsStore.createNewList(
-          nameNewList.value,
-          color.value
-        );
-        if (!success) {
-          //isNewList.value = true; //mantém a tela de criação de lista aberta
-          return;
-        }
-        // dialog.value = false;
-        nameNewList.value = "";
-        color.value = randomColor();
-        listForNewItem.value =
-          countItemsLists.value[countItemsLists.value.length - 1];
+    function duplicateItem(item) {
+      if (item.type === 'to-do') {
+        todoService.duplicate(item.id).then(() => {
+          Notify.create({
+            message: "Tarefa duplicada com sucesso",
+            color: "primary",
+            icon: "done",
+            position: "top",
+            timeout: 2000,
+          });
+          getTodoList();
+        }).catch((error) => {
+          const message = error.message;
+          console.error(message);
+          Notify.create({
+            message: message,
+            color: "negative",
+            icon: "error",
+            position: "top",
+            timeout: 2000,
+          });
+        })
 
-        isNewList.value = false; //fecha a tela de criação de lista
-        return;
+
+      }else if (item.type === 'simples') {
+        listService.duplicate(item.id).then(() => {
+          Notify.create({
+            message: "Item duplicado com sucesso",
+            color: "primary",
+            icon: "done",
+            position: "top",
+            timeout: 2000,
+          });
+          getSimplesList();
+        }).catch((error) => {
+          const message = error.message;
+          console.error(message);
+          Notify.create({
+            message: message,
+            color: "negative",
+            icon: "error",
+            position: "top",
+            timeout: 2000,
+          });
+        })
+      } else if (item.type === 'count') {
+        counterService.duplicate(item.id).then(() => {
+          Notify.create({
+            message: "Item duplicado com sucesso",
+            color: "primary",
+            icon: "done",
+            position: "top",
+            timeout: 2000,
+          });
+          getCountList();
+        }).catch((error) => {
+          const message = error.message;
+          console.error(message);
+          Notify.create({
+            message: message,
+            color: "negative",
+            icon: "error",
+            position: "top",
+            timeout: 2000,
+          });
+        })
       }
-      Notify.create({
-        message: "Cor inválida",
-        color: "negative",
-        icon: "error",
-        position: "top",
-        timeout: 2000,
-      });
     }
+
+    const resetEdit = () => {
+      editingItem.value = false;
+      editingItemData.value = undefined;
+      titleNewItem.value = '';
+      descriptionNewItem.value = '';
+      tagsSelected.value = [];
+      countStartNewItem.value = 0;
+    }
+
+    const newOrEditItemCard = ref(true);
 
     onMounted(() => {
-      itemsStore.initEveryCountItems();
-    });
-
-    const optionsItemDialog = ref(false);
-    const optionChosen = ref(null);
-
-    function editItem() {
-      if (
-        itemsStore.editItem(
-          itemToEdit.value.id,
-          itemToEdit.value.idList,
-          itemToEdit.value.title,
-          itemToEdit.value.description,
-          itemToEdit.value.newList?.id ?? itemToEdit.value.idList
-        )
-      ) {
-        optionsItemDialog.value = false;
-        return;
-      }
-    }
-
-    function duplicateItem(item) {
-      const nameList = countItemsLists.value.find(
-        (list) => list.id == item.idList
-      ).nameList;
-      itemsStore.createNewItem(
-        item.title,
-        item.description,
-        item.tagColor,
-        nameList,
-        item.count ? item.count : 0
-      );
-    }
-
-    const disableButtonEditItem = computed(() => {
-      return (
-        itemToEdit.value.title == oldItem.value.title &&
-        itemToEdit.value.description == oldItem.value.description &&
-        (itemToEdit.value.newList?.id == oldItem.value.idList ||
-          itemToEdit.value.newList == oldItem.value.idList)
-      );
-    });
+      getAllTags();
+      getAllLists();
+    })
 
     return {
+      listType,
       titleNewItem,
       descriptionNewItem,
-      everyCountItems,
-      createNewItem,
-      onRight,
+      dialogTags,
+      tags,
+      newTagTitle,
+      colorTag,
+      createNewTag,
+      createNewTagFunction,
+      tagsSelected,
+      tagsSelectedData,
+      getContrastColor,
+      createOrUpdateItem,
+      countStartNewItem,
+      countList,
+      simplesList,
+      todoList,
+      tab,
+      tabs,
+      allItens,
+      checkItem,
       increment,
       decrement,
-      countItemsLists,
-      listForNewItem,
-      dialog,
-      nameNewList,
-      color,
-      itemsStore,
-      createList,
-      isNewList,
-      dialogCreateNameList,
-      continueCreateNewItem,
-      optionsItemDialog,
+      onRight,
       onLeft,
-      itemToEdit,
-      optionChosen,
+      randomColor,
+      editingItem,
+      resetEdit,
+      newOrEditItemCard,
       editItem,
       duplicateItem,
-      oldItem,
-      disableButtonEditItem,
-    };
+    }
+
   },
+  components: {
+    CardItem: defineAsyncComponent(() => import('components/CardItem.vue')),
+  }
 });
 </script>
 
-<style lang="scss" scoped>
-.item-in-list {
-  display: grid;
-  grid-template-columns: 1fr 0.6fr 0.4fr;
-  gap: 8px;
-  &__description {
-    word-break: break-word;
-  }
-  & .text-caption {
-    word-break: break-word;
-    line-height: 14px;
-  }
-  & .text-subtitle1 {
-    word-break: break-word;
-    line-height: 16px;
-  }
-}
-.no-select {
-  user-select: none;
-  -webkit-user-select: none; /* Para Safari e Chrome */
-  -moz-user-select: none; /* Para Firefox */
-  -ms-user-select: none; /* Para Internet Explorer e Edge */
-}
-</style>
+<style lang="scss" scoped></style>

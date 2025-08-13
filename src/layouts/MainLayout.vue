@@ -2,16 +2,16 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
-        <!-- <q-btn
+        <q-btn
           flat
           dense
           round
           icon="menu"
           aria-label="Menu"
           @click="() => (leftDrawerOpen = !leftDrawerOpen)"
-        /> -->
+        />
         <img
-          src="src/assets/checklist.png"
+          src="@/assets/checklist.png"
           alt="ListAll Logo"
           style="height: 30px"
         />
@@ -74,7 +74,7 @@
       </q-toolbar>
     </q-header>
 
-    <!-- <q-drawer
+    <q-drawer
       v-model="leftDrawerOpen"
       show-if-above
       bordered
@@ -101,7 +101,7 @@
         </q-item>
 
       </q-list>
-    </q-drawer> -->
+    </q-drawer>
 
     <q-page-container>
       <router-view />
