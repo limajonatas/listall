@@ -65,8 +65,8 @@
                 </a>
               </q-card-section>
               <q-card-section >
-                <strong>Versão:</strong> 0.1.0-alpha <br />
-                <strong>Desenvolvido por:</strong> Jonatas Lima
+                <strong>Versão:</strong> 0.2.1-alpha <br />
+                <strong>Desenvolvido por:</strong> Jonatas D. J. Lima
               </q-card-section>
             </q-card>
           </q-popup-proxy>

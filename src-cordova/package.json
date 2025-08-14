@@ -1,7 +1,7 @@
 {
   "name": "com.listall",
   "displayName": "ListAll",
-  "version": "0.2.0",
+  "version": "0.2.0-alpha",
   "description": "A sample Apache Cordova application that responds to the deviceready event.",
   "main": "index.js",
   "scripts": {
