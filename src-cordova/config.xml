@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.listall" version="0.1.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.listall" version="0.2.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>ListAll</name>
     <description>A Quasar Project</description>
     <author email="jonataslimafsa@gmail.com" href="mailton:jonataslimafsa@gmail.com">
@@ -10,6 +10,7 @@
     <allow-intent href="https://*/*" />
     <allow-navigation href="about:*" />
     <platform name="android">
+        <preference name="android-targetSdkVersion" value="35" />
         <icon src="res/checklist.png" />
         <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/checklist.png" />
         <preference name="SplashMaintainAspectRatio" value="true" />
