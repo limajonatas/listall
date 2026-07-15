@@ -1,26 +1,30 @@
 <template>
   <q-page class="q-pa-sm">
-    <q-card class="q-mt-sm">
-      <div class="q-pa-xs">
-        <q-tabs
-          dense
-          v-model="tab"
-          class="text-teal rounded-borders"
-          inline-label
-          align="left"
-          indicator-color="primary"
-          active-color="white"
-          active-bg-color="primary"
-        >
-          <q-tab
-            :name="t.name"
-            :icon="t.icon"
-            :label="t.label"
-            v-for="t in tabs"
-            :key="t.name"
-          />
-        </q-tabs>
-      </div>
+    <q-card class="q-mt-sm" style="display: inline-block">
+      <q-tabs
+        dense
+        v-model="tab"
+        class="text-teal rounded-borders"
+        inline-label
+        align="left"
+        indicator-color="primary"
+        active-color="white"
+        active-bg-color="primary"
+      >
+        <q-tab
+          :class="{ 'q-px-xs': $q.screen.lt.sm }"
+          :style="
+            index < tabs.length - 1 && tab != t.name
+              ? 'border-right: 1px solid grey'
+              : ''
+          "
+          :name="t.name"
+          :icon="t.icon"
+          :label="t.label"
+          v-for="(t, index) in tabs"
+          :key="t.name"
+        />
+      </q-tabs>
     </q-card>
 
     <q-tab-panels
@@ -120,8 +124,16 @@
     />
 
     <!--BOTAO FLUTUANTE-->
-    <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn fab icon="add" color="primary" @click="dialogItem = true" />
+    <q-page-sticky position="bottom-right" :offset="[8, 10]">
+      <q-btn
+        fab
+        icon="add"
+        color="primary"
+        @click="
+          dialogItem = true;
+          listType = tab;
+        "
+      />
     </q-page-sticky>
 
     <!--list TAGS-->
@@ -281,7 +293,7 @@ export default defineComponent({
     const tabs = ref([
       { label: 'To-Do', name: 'to-do', icon: 'checklist' },
       { label: 'Simples', name: 'simples', icon: 'list' },
-      { label: 'Contagem', name: 'count', icon: 'exposure_plus_1' },
+      { label: 'Contador', name: 'count', icon: 'exposure_plus_1' },
     ])
 
 
@@ -446,7 +458,6 @@ export default defineComponent({
         descriptionNewItem.value = '';
         tagsSelected.value = [];
         if (newType === 'count') countStartNewItem.value = 0;
-        editingItem.value = false;
         editingItemData.value = null;
         dialogItem.value = false; // fecha o dialog
 
@@ -460,6 +471,7 @@ export default defineComponent({
           position: "top",
           timeout: 2000,
         });
+        editingItem.value = false;
 
       } catch (error) {
         console.error(error.message);
@@ -495,11 +507,13 @@ export default defineComponent({
     const increment = (item) => {
       counterService.incrementCounter(item.id);
       item.value++;
+      item.updatedAt = new Date().toISOString(); //update date local
     }
 
     const decrement = (item) => {
       counterService.decrementCounter(item.id);
       item.value--;
+      item.updatedAt = new Date().toISOString(); //update date local
     }
 
     function onRight({ reset }, item) {

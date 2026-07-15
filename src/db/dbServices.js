@@ -138,7 +138,7 @@ export const todoService = {
 
     return await db.todo.add({
       ...rest,
-      title: title + " (cópia)",
+      title: (title + ".c").slice(0, 40),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -198,7 +198,7 @@ export const listService = {
 
     return await db.list.add({
       ...rest,
-      title: title + " (cópia)",
+      title: (title + ".c").slice(0, 40),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -286,7 +286,7 @@ export const counterService = {
 
     return await db.counter.add({
       ...rest,
-      title: title + " (cópia)",
+      title: (title + ".c").slice(0, 40),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
