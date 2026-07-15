@@ -1,145 +1,5 @@
 <template>
   <q-page class="q-pa-sm">
-    <q-card>
-      <q-form :submit="createOrUpdateItem" class="q-pa-sm">
-        <div class="flex row justify-between q-py-xs">
-          <span
-            v-text="editingItem ? 'Editar Item' : 'Novo Item'"
-            class="text-bold text-h6"
-            :class="editingItem ? 'text-orange' : 'text-primary'"
-          />
-          <div>
-            <q-btn
-              label="Cancelar"
-              color="negative"
-              dense
-              outline
-              v-if="editingItem"
-              @click="resetEdit"
-            />
-            <q-btn
-              v-else
-              :icon="
-                newOrEditItemCard ? 'keyboard_arrow_up' : 'keyboard_arrow_down'
-              "
-              color="primary"
-              dense
-              flat
-              @click="newOrEditItemCard = !newOrEditItemCard"
-            />
-          </div>
-        </div>
-
-        <q-slide-transition>
-          <div class="flex row" v-show="newOrEditItemCard">
-            <div class="col-12">
-              <!--TITULO-->
-              <q-input
-                class="full-width"
-                filled
-                dense
-                v-model="titleNewItem"
-                label="Título"
-                lazy-rules
-                :rules="[
-                  (val) => val.length <= 40 || 'Máximo de 40 caracteres',
-                ]"
-              />
-              <!--DESCRICAO-->
-              <q-input
-                class="full-width"
-                filled
-                dense
-                v-model="descriptionNewItem"
-                label="Descrição (opcional)"
-              />
-
-              <!--COUNT-->
-              <q-input
-                v-if="listType == 'count'"
-                class="full-width q-mt-md"
-                filled
-                dense
-                v-model="countStartNewItem"
-                type="number"
-                label="Iniciar com"
-              />
-            </div>
-
-            <!--TAGs-->
-            <div class="flex row">
-              <div
-                v-for="tag in tagsSelectedData"
-                :key="tag.id"
-                style="padding: 2px"
-              >
-                <q-badge
-                  :style="{
-                    backgroundColor: tag.color,
-                    color: getContrastColor(tag.color),
-                  }"
-                >
-                  # {{ tag.name }}
-                </q-badge>
-              </div>
-            </div>
-
-            <!--LIST TYPE-->
-            <div
-              class="col-12 row flex items-center q-mt-md"
-              :class="
-                $q.screen.lt.sm
-                  ? 'justify-between'
-                  : 'justify-end q-gutter-x-sm'
-              "
-            >
-              <q-btn-group push rounded>
-                <q-btn
-                  :dense="$q.screen.lt.sm"
-                  label="to-do"
-                  :color="listType == 'to-do' ? 'primary' : undefined"
-                  @click="listType = 'to-do'"
-                  style="border-right: 1px solid #ccc"
-                  :icon="$q.screen.lt.sm ? undefined : 'checklist'"
-                />
-                <q-btn
-                  :dense="$q.screen.lt.sm"
-                  label="simples"
-                  :color="listType == 'simples' ? 'primary' : undefined"
-                  @click="listType = 'simples'"
-                  style="border-right: 1px solid #ccc"
-                  :icon="$q.screen.lt.sm ? undefined : 'list'"
-                />
-                <q-btn
-                  :dense="$q.screen.lt.sm"
-                  label="contador"
-                  :color="listType == 'count' ? 'primary' : undefined"
-                  @click="listType = 'count'"
-                  :icon="$q.screen.lt.sm ? undefined : 'exposure_plus_1'"
-                />
-              </q-btn-group>
-              <!-- TAG -->
-              <q-btn
-                icon="tag"
-                @click="
-                  dialogTags = true;
-                  createNewTag = false;
-                  newTagTitle = undefined;
-                "
-              />
-              <!--CREATE NEW ITEM-->
-              <q-btn
-                type="submit"
-                :color="editingItem ? 'orange' : 'primary'"
-                :icon="editingItem ? 'edit' : 'add'"
-                :label="$q.screen.lt.sm ? '' : editingItem ? 'Editar' : 'Criar'"
-              />
-            </div>
-          </div>
-        </q-slide-transition>
-      </q-form>
-    </q-card>
-
     <q-card class="q-mt-sm">
       <div class="q-pa-xs">
         <q-tabs
@@ -203,9 +63,7 @@
             bordered
             class="rounded-borders"
             separator
-            :style="`max-height: calc(100vh - ${
-              newOrEditItemCard ? '450px' : '300px'
-            }); overflow-y: scroll`"
+            style="max-height: calc(100vh - 200px); overflow-y: scroll"
           >
             <q-slide-item
               @right="onRight($event, item)"
@@ -240,6 +98,29 @@
         </div>
       </q-tab-panel>
     </q-tab-panels>
+
+    <!--DIALOG CRIAR / EDITAR ITEM-->
+    <create-or-edit-item-dialog
+      v-model="dialogItem"
+      :editing-item="editingItem"
+      :title="titleNewItem"
+      :description="descriptionNewItem"
+      :count-start="countStartNewItem"
+      :list-type="listType"
+      :tags-selected-data="tagsSelectedData"
+      @submit="createOrUpdateItem"
+      @openTags="
+        dialogTags = true;
+        createNewTag = false;
+        newTagTitle = undefined;
+      "
+      @hide="resetEdit"
+    />
+
+    <!--BOTAO FLUTUANTE-->
+    <q-page-sticky position="bottom-right" :offset="[18, 18]">
+      <q-btn fab icon="add" color="primary" @click="dialogItem = true" />
+    </q-page-sticky>
 
     <!--list TAGS-->
     <q-dialog v-model="dialogTags" @hide="createNewTag = false">
@@ -378,6 +259,7 @@ export default defineComponent({
     const countStartNewItem = ref(0);
 
     const dialogTags = ref(false)
+    const dialogItem = ref(false)
     const tags = ref([])
     const tagsSelected = ref([])
     const tagsSelectedData = computed(() => {
@@ -556,6 +438,7 @@ export default defineComponent({
         if (newType === 'count') countStartNewItem.value = 0;
         editingItem.value = false;
         editingItemData.value = null;
+        dialogItem.value = false; // fecha o dialog
 
         //atualiza lista da aba atual
         getAllLists();
@@ -709,8 +592,8 @@ export default defineComponent({
       if (item.value !== undefined) countStartNewItem.value = item.value;
 
       editingItem.value = true;
-      newOrEditItemCard.value = true; //open item card edit
       editingItemData.value = {...item};
+      dialogItem.value = true; // abre o dialog de edição
     }
 
     function onLeft({ reset }, item) {
@@ -796,7 +679,6 @@ export default defineComponent({
       countStartNewItem.value = 0;
     }
 
-    const newOrEditItemCard = ref(true);
 
     onMounted(() => {
       getAllTags();
@@ -832,7 +714,7 @@ export default defineComponent({
       randomColor,
       editingItem,
       resetEdit,
-      newOrEditItemCard,
+      dialogItem,
       editItem,
       duplicateItem,
     }
@@ -840,6 +722,7 @@ export default defineComponent({
   },
   components: {
     CardItem: defineAsyncComponent(() => import('components/CardItem.vue')),
+    CreateOrEditItemDialog: defineAsyncComponent(() => import('components/CreateOrEditItemDialog.vue')),
   }
 });
 </script>
