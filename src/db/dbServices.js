@@ -134,10 +134,11 @@ export const todoService = {
     const item = await db.todo.get(id);
     if (!item) return false;
 
-    const { id: _, ...rest } = item; // remove o id
+    const { id: _, title, ...rest } = item;
 
     return await db.todo.add({
       ...rest,
+      title: title + " (cópia)",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -193,10 +194,11 @@ export const listService = {
     const item = await db.list.get(id);
     if (!item) return false;
 
-    const { id: _, ...rest } = item; // remove o id
+    const { id: _, title, ...rest } = item;
 
     return await db.list.add({
       ...rest,
+      title: title + " (cópia)",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -280,11 +282,11 @@ export const counterService = {
     const item = await db.counter.get(id);
     if (!item) return false;
 
-    // criar cópia sem a chave primária
-    const { id: _, ...rest } = item;
+    const { id: _, title, ...rest } = item;
 
     return await db.counter.add({
       ...rest,
+      title: title + " (cópia)",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
