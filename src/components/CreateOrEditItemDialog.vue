@@ -18,6 +18,7 @@
             filled
             dense
             :model-value="title"
+            @update:model-value="$emit('update:title', $event)"
             label="Título"
             lazy-rules
             :rules="[(val) => val.length <= 40 || 'Máximo de 40 caracteres']"
@@ -30,6 +31,7 @@
             filled
             dense
             :model-value="description"
+            @update:model-value="$emit('update:description', $event)"
             label="Descrição (opcional)"
           />
 
@@ -40,6 +42,7 @@
             filled
             dense
             :model-value="countStart"
+            @update:model-value="$emit('update:countStart', $event)"
             type="number"
             label="Iniciar com"
           />
@@ -63,7 +66,13 @@
           </div>
 
           <!--LIST TYPE-->
-          <div :class="$q.screen.gt.xs ? 'row justify-between' : 'column q-gutter-y-sm items-end'">
+          <div
+            :class="
+              $q.screen.gt.xs
+                ? 'row justify-between'
+                : 'column q-gutter-y-sm items-end'
+            "
+          >
             <q-btn-group push rounded>
               <q-btn
                 label="to-do"
@@ -71,6 +80,7 @@
                 style="border-right: 1px solid #ccc"
                 icon="checklist"
                 dense
+                @click="$emit('update:listType', 'to-do')"
               />
               <q-btn
                 label="simples"
@@ -78,12 +88,14 @@
                 style="border-right: 1px solid #ccc"
                 icon="list"
                 dense
+                @click="$emit('update:listType', 'simples')"
               />
               <q-btn
                 label="contador"
                 :color="listType == 'count' ? 'primary' : undefined"
                 icon="exposure_plus_1"
                 dense
+                @click="$emit('update:listType', 'count')"
               />
             </q-btn-group>
 
@@ -141,6 +153,10 @@ export default defineComponent({
   emits: [
     'submit',
     'openTags',
+    'update:title',
+    'update:description',
+    'update:countStart',
+    'update:listType',
   ],
   setup() {
     return { getContrastColor };
