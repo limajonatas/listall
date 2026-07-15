@@ -31,10 +31,14 @@
                 Configurações
                 <q-btn class="q-pa-none" icon="close" flat @click="() => configRef.hide()" />
               </q-card-section>
-              <q-card-section>
+              <q-card-section class="column">
                 <q-toggle
                   v-model="confirmDeleteItem"
                   label="Confirmar exclusão de item"
+                />
+                <q-toggle
+                  v-model="persistLastTabCategory"
+                  label="Persistir última categoria"
                 />
               </q-card-section>
             </q-card>
@@ -106,24 +110,6 @@
     <q-page-container>
       <router-view />
     </q-page-container>
-
-    <!-- Dialog de configuração -->
-    <q-dialog v-model="showDialog">
-      <q-card>
-        <div class="column items-end">
-          <q-btn icon="close" flat @click="() => (showDialog = false)"></q-btn>
-        </div>
-        <q-card-section class="q-pt-none">
-          <div class="text-h6">Configurações</div>
-        </q-card-section>
-        <q-card-section>
-          <q-toggle
-            v-model="confirmDeleteItem"
-            label="Confirmar exclusão de item"
-          />
-        </q-card-section>
-      </q-card>
-    </q-dialog>
   </q-layout>
 </template>
 
@@ -152,9 +138,8 @@ export default defineComponent({
     const aboutAppRef = ref(null);
     const $q = useQuasar();
     const configStore = useConfig();
-    const { confirmDeleteItem } = storeToRefs(configStore);
+    const { confirmDeleteItem, persistLastTabCategory } = storeToRefs(configStore);
     const leftDrawerOpen = ref(false);
-    const showDialog = ref(false); // Nova referência para controlar a exibição do dialog
 
     onMounted(() => {
       leftDrawerOpen.value = false;
@@ -163,8 +148,8 @@ export default defineComponent({
     return {
       essentialLinks: linksList,
       leftDrawerOpen,
-      showDialog,
       confirmDeleteItem,
+      persistLastTabCategory,
       configRef,
       aboutAppRef,
     };

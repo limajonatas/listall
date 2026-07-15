@@ -46,10 +46,11 @@
               :is-todo="tab == 'to-do'"
               :is-count="tab == 'count'"
               @check="checkItem"
-              @increment="increment"
-              @decrement="decrement"
-              @edit="editItem"
-              @duplicate="duplicateItem"
+              @increment="increment(item)"
+              @decrement="decrement(item)"
+              @edit="editItem(item)"
+              @duplicate="duplicateItem(item)"
+              @delete="deleteItem(item)"
             />
           </div>
         </div>
@@ -84,10 +85,11 @@
                   :is-todo="tab == 'to-do'"
                   :is-count="tab == 'count'"
                   @check="checkItem"
-                  @increment="increment"
-                  @decrement="decrement"
-                  @edit="editItem"
-                  @duplicate="duplicateItem"
+                  @increment="increment(item)"
+                  @decrement="decrement(item)"
+                  @edit="editItem(item)"
+                  @duplicate="duplicateItem(item)"
+                  @delete="deleteItem(item)"
                 />
               </template>
             </q-slide-item>
@@ -238,7 +240,7 @@
 </template>
 
 <script lang="js">
-import { computed, defineAsyncComponent, defineComponent, onMounted, ref } from 'vue'
+import { computed, defineAsyncComponent, defineComponent, onMounted, ref, watch } from 'vue'
 import { counterService, listService, tagService, todoService } from 'src/db/dbServices'
 import { Dialog, Notify } from 'quasar';
 import { useConfig } from "src/stores/config-store";
@@ -250,7 +252,7 @@ export default defineComponent({
   setup() {
 
     const configStore = useConfig();
-    const { confirmDeleteItem } = storeToRefs(configStore);
+    const { confirmDeleteItem, persistLastTabCategory, lastTabCategory } = storeToRefs(configStore);
 
     const listType = ref('to-do')
 
@@ -275,7 +277,7 @@ export default defineComponent({
     const simplesList = ref([])
     const countList = ref([])
 
-    const tab = ref('to-do')
+    const tab = ref(persistLastTabCategory.value ? lastTabCategory.value : 'to-do')
     const tabs = ref([
       { label: 'To-Do', name: 'to-do', icon: 'checklist' },
       { label: 'Simples', name: 'simples', icon: 'list' },
@@ -283,6 +285,14 @@ export default defineComponent({
     ])
 
 
+    //salva a última categoria selecionada
+    watch(tab, (newTab) => {
+      if (persistLastTabCategory.value) {
+        lastTabCategory.value = newTab
+      }
+    })
+
+    //retorna todos os itens baseado na categoria selecionada
     const allItens = computed(() => {
       if (tab.value === 'to-do') {
         return todoList.value
@@ -510,74 +520,41 @@ export default defineComponent({
       reset();
     }
 
-    function deleteItem(item) {
-      if (tab.value === 'to-do') {
-        todoService.remove(item.id).then(() => {
-          Notify.create({
-            message: "Tarefa excluída com sucesso",
-            color: "primary",
-            icon: "delete",
-            position: "top",
-            timeout: 2000,
-          });
+    /***
+     * Deleta um item
+     * @param {Object} item - Item a ser deletado
+     */
+    async function deleteItem(item) {
+      try {
+        if (item.type === 'to-do') {
+          await todoService.remove(item.id);
           getTodoList();
-        }).catch((error) => {
-          const message = error.message;
-          console.error(message);
-          Notify.create({
-            message: message,
-            color: "negative",
-            icon: "error",
-            position: "top",
-            timeout: 2000,
-          });
-
-        })
-      } else if (tab.value === 'simples') {
-        listService.remove(item.id).then(() => {
-          Notify.create({
-            message: "Item excluído com sucesso",
-            color: "primary",
-            icon: "delete",
-            position: "top",
-            timeout: 2000,
-          });
+        } else if (item.type === 'simples') {
+          await listService.remove(item.id);
           getSimplesList();
-        }).catch((error) => {
-          const message = error.message;
-          console.error(message);
-          Notify.create({
-            message: message,
-            color: "primary",
-            icon: "error",
-            position: "top",
-            timeout: 2000,
-          });
-        })
-      } else if (tab.value === 'count') {
-        counterService.remove(item.id).then(() => {
-          Notify.create({
-            message: "Item excluído com sucesso",
-            color: "warning",
-            icon: "delete",
-            position: "top",
-            timeout: 2000,
-          });
+        } else if (item.type === 'count') {
+          await counterService.remove(item.id);
           getCountList();
-        }).catch((error) => {
-          const message = error.message;
-          console.error(message);
-          Notify.create({
-            message: message,
-            color: "negative",
-            icon: "error",
-            position: "top",
-            timeout: 2000,
-          });
-        })
-      }
-      if (navigator && navigator.vibrate) {
-        navigator.vibrate(40);
+        }
+        Notify.create({
+          message: "Item excluído com sucesso",
+          color: "warning",
+          icon: "delete",
+          position: "top",
+          timeout: 2000,
+        });
+        if (navigator && navigator.vibrate) {
+          navigator.vibrate(40);
+        }
+      } catch (error) {
+        console.error(error.message);
+        Notify.create({
+          message: error.message,
+          color: "negative",
+          icon: "error",
+          position: "top",
+          timeout: 2000,
+        });
       }
     }
 
@@ -685,6 +662,7 @@ export default defineComponent({
       dialogItem,
       editItem,
       duplicateItem,
+      deleteItem,
     }
 
   },
