@@ -148,5 +148,6 @@ export default defineComponent({
   -webkit-box-orient: vertical;
   overflow: hidden;
   word-break: break-word;
+  line-height: 20pt;
 }
 </style>
