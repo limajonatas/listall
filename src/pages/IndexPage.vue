@@ -601,72 +601,40 @@ export default defineComponent({
       reset();
     }
 
-    function duplicateItem(item) {
-      if (item.type === 'to-do') {
-        todoService.duplicate(item.id).then(() => {
-          Notify.create({
-            message: "Tarefa duplicada com sucesso",
-            color: "primary",
-            icon: "done",
-            position: "top",
-            timeout: 2000,
-          });
+    /**
+     * Duplica um item
+     * @param {Object} item - Item a ser duplicado
+     */
+    async function duplicateItem(item) {
+      try {
+        if (item.type === 'to-do') {
+          await todoService.duplicate(item.id);
           getTodoList();
-        }).catch((error) => {
-          const message = error.message;
-          console.error(message);
-          Notify.create({
-            message: message,
-            color: "negative",
-            icon: "error",
-            position: "top",
-            timeout: 2000,
-          });
-        })
-
-
-      }else if (item.type === 'simples') {
-        listService.duplicate(item.id).then(() => {
-          Notify.create({
-            message: "Item duplicado com sucesso",
-            color: "primary",
-            icon: "done",
-            position: "top",
-            timeout: 2000,
-          });
+        } else if (item.type === 'simples') {
+          await listService.duplicate(item.id);
           getSimplesList();
-        }).catch((error) => {
-          const message = error.message;
-          console.error(message);
-          Notify.create({
-            message: message,
-            color: "negative",
-            icon: "error",
-            position: "top",
-            timeout: 2000,
-          });
-        })
-      } else if (item.type === 'count') {
-        counterService.duplicate(item.id).then(() => {
-          Notify.create({
-            message: "Item duplicado com sucesso",
-            color: "primary",
-            icon: "done",
-            position: "top",
-            timeout: 2000,
-          });
+        } else if (item.type === 'count') {
+          await counterService.duplicate(item.id);
           getCountList();
-        }).catch((error) => {
-          const message = error.message;
-          console.error(message);
-          Notify.create({
-            message: message,
-            color: "negative",
-            icon: "error",
-            position: "top",
-            timeout: 2000,
-          });
-        })
+        }
+
+        Notify.create({
+          message: "Item duplicado com sucesso",
+          color: "primary",
+          icon: "done",
+          position: "top",
+          timeout: 2000,
+        });
+      } catch (error) {
+        // captura o erro e notifica o usuário
+        console.error(error.message);
+        Notify.create({
+          message: error.message,
+          color: "negative",
+          icon: "error",
+          position: "top",
+          timeout: 2000,
+        });
       }
     }
 
