@@ -14,7 +14,7 @@
         {{ item.title }}
       </span>
 
-      <span style="word-break: break-word;">
+      <span style="word-break: break-word">
         {{ item.description }}
       </span>
 
@@ -34,15 +34,6 @@
             # {{ tag?.name ?? "" }}
           </q-badge>
         </div>
-      </div>
-      <div style="font-size: 11px; color: grey; line-height: 12px" class="column">
-        <span> Criado em: {{ formatDate(item.createdAt) }} </span>
-        <span v-if="item.updatedAt">
-          Última atualização: {{ formatDate(item.updatedAt) }}
-        </span>
-        <span v-if="item.checkedAt" class="text-accent">
-          Concluído em: {{ formatDate(item.checkedAt) }}
-        </span>
       </div>
     </q-item-section>
 
@@ -83,20 +74,35 @@
       :context-menu="$q.platform.is.desktop"
       @show="menu = true"
       @hide="menu = false"
-      style="width: 130px"
     >
-      <q-list>
+      <q-list dense>
         <q-item clickable v-close-popup @click="$emit('edit', item)">
-          <q-item-section>
-            <q-icon name="edit" />
-          </q-item-section>
+          <q-avatar>
+            <q-icon name="edit" size="xs" />
+          </q-avatar>
           <q-item-section>Editar</q-item-section>
         </q-item>
         <q-item clickable v-close-popup @click="$emit('duplicate', item)">
-          <q-item-section>
-            <q-icon name="content_copy" />
-          </q-item-section>
+          <q-avatar>
+            <q-icon name="content_copy" size="xs" />
+          </q-avatar>
           <q-item-section>Duplicar</q-item-section>
+        </q-item>
+        <!---INFO-->
+        <q-item>
+          <q-badge
+          outline
+            style="font-size: 11px; color: grey; line-height: 12px"
+            class="column q-mb-sm"
+          >
+            <span> Criado em: {{ formatDate(item.createdAt) }} </span>
+            <span v-if="item.updatedAt">
+              Última atualização: {{ formatDate(item.updatedAt) }}
+            </span>
+            <span v-if="item.checkedAt" class="text-accent">
+              Concluído em: {{ formatDate(item.checkedAt) }}
+            </span>
+          </q-badge>
         </q-item>
       </q-list>
     </q-menu>
@@ -105,7 +111,7 @@
 
 <script>
 import { tagService } from "src/db/dbServices";
-import { defineComponent, computed, ref, onMounted } from "vue";
+import { defineComponent, computed, ref, onMounted, nextTick } from "vue";
 import { formatDate } from "src/utils/utils";
 
 export default defineComponent({
