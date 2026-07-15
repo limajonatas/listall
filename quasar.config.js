@@ -169,7 +169,7 @@ module.exports = configure(function (/* ctx */) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli/developing-cordova-apps/configuring-cordova
     cordova: {
-      version: '0.2.0-alpha'
+      version: '0.3.0-alpha'
       // noIosLegacyBuildFlag: true, // uncomment only if you know what you are doing
     },
 

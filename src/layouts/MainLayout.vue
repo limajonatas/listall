@@ -29,7 +29,12 @@
                 class="text-h6 text-bold q-pb-none row justify-between"
               >
                 Configurações
-                <q-btn class="q-pa-none" icon="close" flat @click="() => configRef.hide()" />
+                <q-btn
+                  class="q-pa-none"
+                  icon="close"
+                  flat
+                  @click="() => configRef.hide()"
+                />
               </q-card-section>
               <q-card-section class="column">
                 <q-toggle
@@ -56,10 +61,15 @@
                 class="text-h6 text-bold q-pb-none row justify-between"
               >
                 Sobre o aplicativo
-                <q-btn class="q-pa-none" icon="close" flat @click="() => aboutAppRef.hide()" />
+                <q-btn
+                  class="q-pa-none"
+                  icon="close"
+                  flat
+                  @click="() => aboutAppRef.hide()"
+                />
               </q-card-section>
 
-              <q-card-section >
+              <q-card-section>
                 Para feedback ou relatórios de bugs, por favor, envie um email
                 para:
                 <a
@@ -68,9 +78,20 @@
                   jonataslimafsa@gmail.com
                 </a>
               </q-card-section>
-              <q-card-section >
-                <strong>Versão:</strong> 0.2.1-alpha <br />
+              <q-card-section>
+                <strong>Versão:</strong> 0.3.0-alpha <br />
                 <strong>Desenvolvido por:</strong> Jonatas D. J. Lima
+                <br />
+                <a href="https://github.com/limajonatas" target="_blank">
+                  GitHub
+                </a>
+                <br />
+                <a
+                  href="https://www.linkedin.com/in/jonatas-lima-a001691a1/"
+                  target="_blank"
+                >
+                  LinkedIn
+                </a>
               </q-card-section>
             </q-card>
           </q-popup-proxy>
@@ -103,7 +124,6 @@
             <q-item-label caption>{{ link.caption }}</q-item-label>
           </q-item-section>
         </q-item>
-
       </q-list>
     </q-drawer>
 
@@ -138,7 +158,8 @@ export default defineComponent({
     const aboutAppRef = ref(null);
     const $q = useQuasar();
     const configStore = useConfig();
-    const { confirmDeleteItem, persistLastTabCategory } = storeToRefs(configStore);
+    const { confirmDeleteItem, persistLastTabCategory } =
+      storeToRefs(configStore);
     const leftDrawerOpen = ref(false);
 
     onMounted(() => {

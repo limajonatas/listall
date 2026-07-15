@@ -1,7 +1,7 @@
 {
   "name": "list-all",
-  "version": "0.1.0",
-  "description": "A Quasar Project",
+  "version": "0.3.0-alpha",
+  "description": "Aplicativo para gerenciamento de listas 3 em 1",
   "productName": "ListAll",
   "author": "Jonatas <jonataslimafsa@gmail.com>",
   "private": true,
@@ -32,7 +32,7 @@
     "prettier": "^2.5.1"
   },
   "engines": {
-    "node": "^18 || ^16 || ^14.19",
+    "node": "^20 || ^18 || ^16 || ^14.19",
     "npm": ">= 6.13.4",
     "yarn": ">= 1.21.1"
   }
