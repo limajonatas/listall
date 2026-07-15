@@ -3,16 +3,16 @@
     clickable
     v-ripple
     dense
-    class="rounded-borders q-pa-sm shadow-2"
+    class="rounded-borders q-pa-sm shadow-2 fit"
     @click="detailDialog = true"
   >
-    <q-item-section>
-      <span
-        class="text-bold text-h6"
+    <q-item-section top>
+      <div
+        class="text-bold text-h6 title-clamp"
         :class="{ 'line-through text-grey': item.check }"
       >
         {{ item.title }}
-      </span>
+      </div>
 
       <!--TAGs-->
       <div class="flex row" v-if="item.tags.length > 0">
@@ -140,10 +140,13 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-.line-through {
-  text-decoration: line-through;
-}
-.text-grey {
-  color: #888;
+
+.title-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
 }
 </style>

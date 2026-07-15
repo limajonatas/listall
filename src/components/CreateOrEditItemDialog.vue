@@ -20,13 +20,15 @@
             :model-value="title"
             @update:model-value="$emit('update:title', $event)"
             label="Título"
+            maxlength="40"
+            counter
             lazy-rules
             :rules="[(val) => val.length <= 40 || 'Máximo de 40 caracteres']"
           />
           <!--DESCRIÇÃO-->
           <q-input
             type="textarea"
-            rows="3"
+            rows="5"
             class="full-width q-mt-sm"
             filled
             dense
@@ -44,7 +46,7 @@
             :model-value="countStart"
             @update:model-value="$emit('update:countStart', $event)"
             type="number"
-            label="Iniciar com"
+            :label="editingItem ? 'Valor atual' : 'Valor inicial'"
           />
 
           <!--TAGs selecionadas-->
