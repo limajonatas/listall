@@ -29,6 +29,7 @@ npm run build
 ### v0.3.0-alpha (atual)
 
 - Melhorias visuais
+- Nova homepage
 - Correção de bugs
 - Melhorias de performance
 - nova opção na configuração
