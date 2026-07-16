@@ -1,7 +1,7 @@
 {
   "name": "list-all",
-  "version": "0.1.0",
-  "description": "A Quasar Project",
+  "version": "0.3.0-alpha",
+  "description": "Aplicativo para gerenciamento de listas 3 em 1",
   "productName": "ListAll",
   "author": "Jonatas <jonataslimafsa@gmail.com>",
   "private": true,
@@ -15,6 +15,7 @@
   "dependencies": {
     "@quasar/cli": "^2.3.0",
     "@quasar/extras": "^1.16.4",
+    "dexie": "^4.0.11",
     "pinia": "^2.0.11",
     "pinia-plugin-persistedstate": "^3.2.1",
     "quasar": "^2.6.0",
@@ -31,7 +32,7 @@
     "prettier": "^2.5.1"
   },
   "engines": {
-    "node": "^18 || ^16 || ^14.19",
+    "node": "^20 || ^18 || ^16 || ^14.19",
     "npm": ">= 6.13.4",
     "yarn": ">= 1.21.1"
   }

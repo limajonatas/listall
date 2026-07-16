@@ -2,16 +2,16 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
-        <!-- <q-btn
+        <q-btn
           flat
           dense
           round
           icon="menu"
           aria-label="Menu"
           @click="() => (leftDrawerOpen = !leftDrawerOpen)"
-        /> -->
+        />
         <img
-          src="src/assets/checklist.png"
+          src="@/assets/checklist.png"
           alt="ListAll Logo"
           style="height: 30px"
         />
@@ -29,12 +29,21 @@
                 class="text-h6 text-bold q-pb-none row justify-between"
               >
                 Configurações
-                <q-btn class="q-pa-none" icon="close" flat @click="() => configRef.hide()" />
+                <q-btn
+                  class="q-pa-none"
+                  icon="close"
+                  flat
+                  @click="() => configRef.hide()"
+                />
               </q-card-section>
-              <q-card-section>
+              <q-card-section class="column">
                 <q-toggle
                   v-model="confirmDeleteItem"
                   label="Confirmar exclusão de item"
+                />
+                <q-toggle
+                  v-model="persistLastTabCategory"
+                  label="Persistir última categoria"
                 />
               </q-card-section>
             </q-card>
@@ -52,10 +61,15 @@
                 class="text-h6 text-bold q-pb-none row justify-between"
               >
                 Sobre o aplicativo
-                <q-btn class="q-pa-none" icon="close" flat @click="() => aboutAppRef.hide()" />
+                <q-btn
+                  class="q-pa-none"
+                  icon="close"
+                  flat
+                  @click="() => aboutAppRef.hide()"
+                />
               </q-card-section>
 
-              <q-card-section >
+              <q-card-section>
                 Para feedback ou relatórios de bugs, por favor, envie um email
                 para:
                 <a
@@ -64,9 +78,20 @@
                   jonataslimafsa@gmail.com
                 </a>
               </q-card-section>
-              <q-card-section >
-                <strong>Versão:</strong> 0.1.0-alpha <br />
-                <strong>Desenvolvido por:</strong> Jonatas Lima
+              <q-card-section>
+                <strong>Versão:</strong> 0.3.0-alpha <br />
+                <strong>Desenvolvido por:</strong> Jonatas D. J. Lima
+                <br />
+                <a href="https://github.com/limajonatas" target="_blank">
+                  GitHub
+                </a>
+                <br />
+                <a
+                  href="https://www.linkedin.com/in/jonatas-lima-a001691a1/"
+                  target="_blank"
+                >
+                  LinkedIn
+                </a>
               </q-card-section>
             </q-card>
           </q-popup-proxy>
@@ -74,7 +99,7 @@
       </q-toolbar>
     </q-header>
 
-    <!-- <q-drawer
+    <q-drawer
       v-model="leftDrawerOpen"
       show-if-above
       bordered
@@ -99,31 +124,12 @@
             <q-item-label caption>{{ link.caption }}</q-item-label>
           </q-item-section>
         </q-item>
-
       </q-list>
-    </q-drawer> -->
+    </q-drawer>
 
     <q-page-container>
       <router-view />
     </q-page-container>
-
-    <!-- Dialog de configuração -->
-    <q-dialog v-model="showDialog">
-      <q-card>
-        <div class="column items-end">
-          <q-btn icon="close" flat @click="() => (showDialog = false)"></q-btn>
-        </div>
-        <q-card-section class="q-pt-none">
-          <div class="text-h6">Configurações</div>
-        </q-card-section>
-        <q-card-section>
-          <q-toggle
-            v-model="confirmDeleteItem"
-            label="Confirmar exclusão de item"
-          />
-        </q-card-section>
-      </q-card>
-    </q-dialog>
   </q-layout>
 </template>
 
@@ -152,9 +158,9 @@ export default defineComponent({
     const aboutAppRef = ref(null);
     const $q = useQuasar();
     const configStore = useConfig();
-    const { confirmDeleteItem } = storeToRefs(configStore);
+    const { confirmDeleteItem, persistLastTabCategory } =
+      storeToRefs(configStore);
     const leftDrawerOpen = ref(false);
-    const showDialog = ref(false); // Nova referência para controlar a exibição do dialog
 
     onMounted(() => {
       leftDrawerOpen.value = false;
@@ -163,8 +169,8 @@ export default defineComponent({
     return {
       essentialLinks: linksList,
       leftDrawerOpen,
-      showDialog,
       confirmDeleteItem,
+      persistLastTabCategory,
       configRef,
       aboutAppRef,
     };
