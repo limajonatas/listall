@@ -17,29 +17,39 @@
         <q-icon name="search" />
       </template>
     </q-input>
-    <!-- HEADER DO MODO DE SELEÇÃO -->
+    <!-- HEADER DA LISTA / SELEÇÃO -->
     <q-item
-      v-if="selectionActiveComputed"
-      class="row flex justify-between items-center q-pb-none q-pr-lg"
+      class="row flex justify-between items-center q-pb-none"
+      :class="{ 'q-pr-lg': selectionActiveComputed }"
       dense
     >
-      <div class="text-caption text-grey">
+      <!-- INFO -->
+      <div v-if="selectionActiveComputed" class="text-caption text-grey">
         {{ tags.filter((t) => t.selected).length }} tag(s) selecionada(s)
       </div>
+      <!-- CRIAR TAG -->
+      <div v-else class="q-pl-sm">
+        <q-btn
+          flat
+          dense
+          color="primary"
+          icon="add"
+          label="Nova Tag"
+          @click="openCreateDialog"
+        />
+      </div>
+      <!-- CHECKBOX SELECIONAR TODAS - se estiver em modo de seleção -->
       <q-checkbox
+        v-if="selectionActiveComputed"
         dense
         v-model="selectAll"
         label="Todas"
         left-label
         class="q-pr-xs"
       />
-    </q-item>
-    <q-item
-      v-else-if="!selectionMode"
-      class="row flex justify-end q-pb-none"
-      dense
-    >
+      <!-- BOTÃO MÚLTIPLA SELEÇÃO - se não estiver em modo de seleção -->
       <q-btn
+        v-else-if="!selectionMode"
         flat
         color="primary"
         dense
@@ -51,7 +61,7 @@
 
     <!-- LISTA COM INDICADOR DE SCROLL -->
     <div class="list-wrapper">
-      <!-- MODO SELEÇÃO: CHIPS LADO A LADO -->
+      <!-- MODO SELEÇÃO: CHIPS LADO A LADO - modo de seleção -->
       <div
         v-if="selectionActiveComputed"
         class="row q-gutter-sm q-pa-sm tags-list items-start content-start"
@@ -82,7 +92,7 @@
         </div>
       </div>
 
-      <!-- MODO NORMAL: LISTA -->
+      <!-- MODO NORMAL: LISTA (editar/deletar) -->
       <q-list
         v-else
         separator
@@ -104,13 +114,29 @@
           <q-item-section>
             <q-item-label>{{ tag.name }}</q-item-label>
           </q-item-section>
+          <!--AÇÕES - EDITAR/DELETAR -->
           <q-item-section side>
             <div class="row flex q-gutter-x-xs">
-              <q-btn dense icon="edit" flat round color="warning" />
-              <q-btn dense icon="delete" flat round color="red" />
+              <q-btn
+                dense
+                icon="edit"
+                flat
+                round
+                color="warning"
+                @click="openEditDialog(tag)"
+              />
+              <q-btn
+                dense
+                icon="delete"
+                flat
+                round
+                color="red"
+                @click="deleteSingleTag(tag)"
+              />
             </div>
           </q-item-section>
         </q-item>
+        <!--SEM TAGS-->
         <q-item v-if="filteredTags.length === 0">
           <q-item-section>
             <q-item-label class="text-grey">
@@ -141,8 +167,6 @@
             tags.forEach((t) => (t.selected = false));
           "
         />
-        <div v-if="selectionMode"></div>
-        <!-- Spacer par empurrar Selecionar pra direita quando não há Cancelar -->
 
         <!-- BOTÃO EXCLUIR VÁRIOS (apenas em modo de edição da página) -->
         <q-btn
@@ -168,6 +192,12 @@
         />
       </q-card-actions>
     </template>
+
+    <create-or-edit-tag-dialog
+      v-model="showCreateDialog"
+      :tag-to-edit="tagToEdit"
+      @saved="getAllTags"
+    />
   </dialog-base>
 </template>
 
@@ -189,6 +219,7 @@ export default defineComponent({
   /**
    * @prop {boolean} modelValue - controla visibilidade do dialog (v-model)
    * @prop {boolean} selectionMode - (futuro) modo de seleção de tags
+   * @prop {string} actionButtonTitle - título do botão de seleção
    */
   props: {
     modelValue: {
@@ -208,6 +239,9 @@ export default defineComponent({
   components: {
     DialogBase: defineAsyncComponent(() =>
       import("src/components/DialogBase.vue")
+    ),
+    CreateOrEditTagDialog: defineAsyncComponent(() =>
+      import("src/components/CreateOrEditTagDialog.vue")
     ),
   },
   setup(props) {
@@ -330,6 +364,49 @@ export default defineComponent({
       });
     }
 
+    /**
+     * Exclui uma tag individual.
+     */
+    function deleteSingleTag(tag) {
+      Dialog.create({
+        title: "Excluir Tag",
+        message: `Deseja realmente excluir a tag "${tag.name}"?`,
+        cancel: true,
+        persistent: true,
+      }).onOk(async () => {
+        try {
+          await tagService.remove(tag.id);
+          Notify.create({
+            message: "Tag removida",
+            color: "warning",
+            position: "top",
+            timeout: 1500,
+          });
+          getAllTags();
+        } catch (error) {
+          Notify.create({
+            message: error.message,
+            color: "negative",
+            position: "top",
+            timeout: 2000,
+          });
+        }
+      });
+    }
+
+    const showCreateDialog = ref(false);
+    const tagToEdit = ref(null);
+
+    function openCreateDialog() {
+      tagToEdit.value = null;
+      showCreateDialog.value = true;
+    }
+
+    function openEditDialog(tag) {
+      tagToEdit.value = tag;
+      showCreateDialog.value = true;
+    }
+
     onMounted(() => {
       getAllTags();
     });
@@ -346,7 +423,13 @@ export default defineComponent({
       selectionActiveComputed,
       selectAll,
       deleteMultiple,
+      deleteSingleTag,
       getContrastColor,
+      showCreateDialog,
+      tagToEdit,
+      openCreateDialog,
+      openEditDialog,
+      getAllTags,
     };
   },
 });
