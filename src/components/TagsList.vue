@@ -30,7 +30,7 @@
         dense
         v-model="selectAll"
         label="Todas"
-        left-label 
+        left-label
         class="q-pr-xs"
       />
     </q-item>
@@ -51,7 +51,40 @@
 
     <!-- LISTA COM INDICADOR DE SCROLL -->
     <div class="list-wrapper">
+      <!-- MODO SELEÇÃO: CHIPS LADO A LADO -->
+      <div
+        v-if="selectionActiveComputed"
+        class="row q-gutter-sm q-pa-sm tags-list items-start content-start"
+        ref="listRef"
+        @scroll="onScroll"
+      >
+        <q-chip
+          v-for="tag in filteredTags"
+          :key="tag.id"
+          clickable
+          :outline="!tag.selected"
+          @click="tag.selected = !tag.selected"
+          :style="{
+            backgroundColor: tag.selected ? tag.color : 'transparent',
+            borderColor: tag.color,
+            color: tag.selected ? getContrastColor(tag.color) : tag.color,
+            borderWidth: '2px',
+            borderStyle: 'solid',
+          }"
+        >
+          # {{ tag.name }}
+        </q-chip>
+        <div
+          v-if="filteredTags.length === 0"
+          class="text-grey full-width text-center q-pa-md"
+        >
+          {{ search ? "Nenhuma tag encontrada" : "Sem TAGs criadas" }}
+        </div>
+      </div>
+
+      <!-- MODO NORMAL: LISTA -->
       <q-list
+        v-else
         separator
         dense
         bordered
@@ -73,28 +106,8 @@
           </q-item-section>
           <q-item-section side>
             <div class="row flex q-gutter-x-xs">
-              <q-btn
-                v-if="!selectionActiveComputed"
-                dense
-                icon="edit"
-                flat
-                round
-                color="warning"
-              />
-              <q-btn
-                v-if="!selectionActiveComputed"
-                dense
-                icon="delete"
-                flat
-                round
-                color="red"
-              />
-              <q-checkbox
-                v-if="selectionActiveComputed"
-                dense
-                v-model="tag.selected"
-                @click.stop
-              />
+              <q-btn dense icon="edit" flat round color="warning" />
+              <q-btn dense icon="delete" flat round color="red" />
             </div>
           </q-item-section>
         </q-item>
@@ -170,6 +183,7 @@ import {
 } from "vue";
 import { Dialog, Notify } from "quasar";
 import { tagService } from "src/db/dbServices";
+import { getContrastColor } from "src/utils/utils";
 export default defineComponent({
   name: "tags-list",
   /**
@@ -225,8 +239,13 @@ export default defineComponent({
       checkScroll();
     }
 
+    const selectionActive = ref(false);
+    const selectionActiveComputed = computed(() => {
+      return props.selectionMode || selectionActive.value;
+    });
+
     // re-checar após filtro mudar (DOM precisa atualizar antes)
-    watch(filteredTags, () => {
+    watch([filteredTags, selectionActiveComputed], () => {
       nextTick(checkScroll);
     });
 
@@ -253,11 +272,6 @@ export default defineComponent({
         marginBottom: "2px",
       };
     }
-
-    const selectionActive = ref(false);
-    const selectionActiveComputed = computed(() => {
-      return props.selectionMode || selectionActive.value;
-    });
 
     /**
      * Getter/Setter para o checkbox "Selecionar Todas".
@@ -332,6 +346,7 @@ export default defineComponent({
       selectionActiveComputed,
       selectAll,
       deleteMultiple,
+      getContrastColor,
     };
   },
 });
