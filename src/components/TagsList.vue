@@ -17,6 +17,37 @@
         <q-icon name="search" />
       </template>
     </q-input>
+    <!-- HEADER DO MODO DE SELEÇÃO -->
+    <q-item
+      v-if="selectionActiveComputed"
+      class="row flex justify-between items-center q-pb-none q-pr-lg"
+      dense
+    >
+      <div class="text-caption text-grey">
+        {{ tags.filter((t) => t.selected).length }} tag(s) selecionada(s)
+      </div>
+      <q-checkbox
+        dense
+        v-model="selectAll"
+        label="Todas"
+        left-label 
+        class="q-pr-xs"
+      />
+    </q-item>
+    <q-item
+      v-else-if="!selectionMode"
+      class="row flex justify-end q-pb-none"
+      dense
+    >
+      <q-btn
+        flat
+        color="primary"
+        dense
+        label="Múltipla Seleção"
+        icon="checklist"
+        @click="selectionActive = true"
+      />
+    </q-item>
 
     <!-- LISTA COM INDICADOR DE SCROLL -->
     <div class="list-wrapper">
@@ -32,9 +63,39 @@
           v-for="tag in filteredTags"
           :key="tag.id"
           :style="styleTag(tag.color)"
+          :clickable="selectionActiveComputed"
+          @click="
+            selectionActiveComputed ? (tag.selected = !tag.selected) : null
+          "
         >
           <q-item-section>
             <q-item-label>{{ tag.name }}</q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <div class="row flex q-gutter-x-xs">
+              <q-btn
+                v-if="!selectionActiveComputed"
+                dense
+                icon="edit"
+                flat
+                round
+                color="warning"
+              />
+              <q-btn
+                v-if="!selectionActiveComputed"
+                dense
+                icon="delete"
+                flat
+                round
+                color="red"
+              />
+              <q-checkbox
+                v-if="selectionActiveComputed"
+                dense
+                v-model="tag.selected"
+                @click.stop
+              />
+            </div>
           </q-item-section>
         </q-item>
         <q-item v-if="filteredTags.length === 0">
@@ -53,6 +114,47 @@
         </div>
       </transition>
     </div>
+
+    <!-- RODAPÉ - Apenas no modo de seleção -->
+    <template #footer v-if="selectionActiveComputed">
+      <q-card-actions align="between" class="q-pa-none q-pt-sm">
+        <q-btn
+          v-if="!selectionMode"
+          flat
+          color="grey"
+          label="Cancelar"
+          @click="
+            selectionActive = false;
+            tags.forEach((t) => (t.selected = false));
+          "
+        />
+        <div v-if="selectionMode"></div>
+        <!-- Spacer par empurrar Selecionar pra direita quando não há Cancelar -->
+
+        <!-- BOTÃO EXCLUIR VÁRIOS (apenas em modo de edição da página) -->
+        <q-btn
+          v-if="!selectionMode"
+          color="negative"
+          label="Excluir"
+          :disable="tags.filter((t) => t.selected).length === 0"
+          @click="deleteMultiple"
+        />
+        <!-- BOTÃO SELECIONAR VÁRIOS (quando acionado externamente) -->
+        <q-btn
+          v-else
+          color="primary"
+          :label="actionButtonTitle"
+          @click="
+            $emit(
+              'submitSelection',
+              tags.filter((t) => t.selected)
+            );
+            selectionActive = false;
+          "
+          v-close-popup
+        />
+      </q-card-actions>
+    </template>
   </dialog-base>
 </template>
 
@@ -66,6 +168,7 @@ import {
   watch,
   nextTick,
 } from "vue";
+import { Dialog, Notify } from "quasar";
 import { tagService } from "src/db/dbServices";
 export default defineComponent({
   name: "tags-list",
@@ -82,14 +185,18 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    actionButtonTitle: {
+      type: String,
+      default: "Selecionar",
+    },
   },
-  emits: ["update:modelValue"],
+  emits: ["update:modelValue", "submitSelection"],
   components: {
     DialogBase: defineAsyncComponent(() =>
       import("src/components/DialogBase.vue")
     ),
   },
-  setup() {
+  setup(props) {
     const tags = ref([]); // todas as tags do banco
     const search = ref(""); // texto digitado no campo de pesquisa
     const listRef = ref(null); // ref ao elemento da q-list (para ler scrollTop etc)
@@ -125,7 +232,7 @@ export default defineComponent({
 
     function getAllTags() {
       tagService.getAll().then((tagsResponse) => {
-        tags.value = tagsResponse;
+        tags.value = tagsResponse.map((t) => ({ ...t, selected: false }));
         // checar após renderizar
         setTimeout(checkScroll, 100);
       });
@@ -147,6 +254,68 @@ export default defineComponent({
       };
     }
 
+    const selectionActive = ref(false);
+    const selectionActiveComputed = computed(() => {
+      return props.selectionMode || selectionActive.value;
+    });
+
+    /**
+     * Getter/Setter para o checkbox "Selecionar Todas".
+     * Relativamente aos itens atualmente visíveis (filtrados).
+     */
+    const selectAll = computed({
+      get() {
+        return (
+          filteredTags.value.length > 0 &&
+          filteredTags.value.every((t) => t.selected)
+        );
+      },
+      set(val) {
+        filteredTags.value.forEach((t) => {
+          t.selected = val;
+        });
+      },
+    });
+
+    /**
+     * Exclui as tags selecionadas com confirmação.
+     */
+    function deleteMultiple() {
+      const selectedTags = tags.value.filter((t) => t.selected);
+      if (selectedTags.length === 0) return;
+
+      Dialog.create({
+        title: "Excluir Tags",
+        message: `Deseja realmente excluir ${selectedTags.length} tag(s)?`,
+        cancel: true,
+        persistent: true,
+      }).onOk(async () => {
+        try {
+          for (const tag of selectedTags) {
+            await tagService.remove(tag.id);
+          }
+          Notify.create({
+            message: "Tags excluídas com sucesso",
+            color: "warning",
+            icon: "delete",
+            position: "top",
+            timeout: 2000,
+          });
+          selectionActive.value = false;
+          getAllTags();
+        } catch (error) {
+          console.error(error.message);
+          Notify.create({
+            message: error.message,
+            color: "negative",
+            icon: "error",
+            position: "top",
+            timeout: 2000,
+          });
+        }
+      });
+    }
+
     onMounted(() => {
       getAllTags();
     });
@@ -159,6 +328,10 @@ export default defineComponent({
       listRef,
       hasMoreBelow,
       onScroll,
+      selectionActive,
+      selectionActiveComputed,
+      selectAll,
+      deleteMultiple,
     };
   },
 });
