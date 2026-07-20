@@ -115,17 +115,14 @@
       v-model:list-type="listType"
       :tags-selected-data="tagsSelectedData"
       @submit="createOrUpdateItem"
-      @openTags="
-        dialogTags = true;
-        createNewTag = false;
-        newTagTitle = undefined;
-      "
+      @openTags="openTagsSelection"
       @hide="resetEdit"
     />
 
     <!--BOTAO FLUTUANTE-->
     <q-page-sticky position="bottom-right" :offset="[8, 10]">
       <q-btn
+        dense
         fab
         icon="add"
         color="primary"
@@ -136,118 +133,11 @@
       />
     </q-page-sticky>
 
-    <!--list TAGS-->
-    <q-dialog v-model="dialogTags" @hide="createNewTag = false">
-      <q-card>
-        <q-card-section style="min-width: 300px">
-          <div
-            class="text-primary text-subtitle1 text-bold full-width flex row justify-between"
-          >
-            <span v-text="'TAGs'" class="q-mr-xl" />
-            <q-btn class="q-pa-none" icon="close" flat dense v-close-popup />
-          </div>
-          <div class="flex column">
-            <span v-if="tags.length <= 0" v-text="'Sem TAGs'" />
-
-            <q-btn
-              v-if="!createNewTag"
-              class="q-mt-xs"
-              color="primary"
-              label="Criar Tag"
-              @click="
-                createNewTag = true;
-                colorTag = randomColor();
-              "
-            />
-
-            <!--CREATE NEW TAG-->
-            <q-slide-transition>
-              <q-form
-                class="shadow-2 q-pa-md column"
-                v-show="createNewTag"
-                @submit="createNewTagFunction"
-              >
-                <q-input
-                  class="full-width"
-                  filled
-                  dense
-                  v-model="newTagTitle"
-                  label="Nova Tag"
-                  lazy-rules
-                  :rules="[
-                    (val) => val.length <= 20 || 'Máximo de 20 caracteres',
-                  ]"
-                  maxlength="20"
-                />
-                <div class="flex row no-wrap items-center">
-                  <q-icon
-                    :style="`color: ${colorTag}`"
-                    name="tag"
-                    size="lg"
-                    class="q-mb-lg"
-                  />
-                  <q-input
-                    label="Cor"
-                    dense
-                    filled
-                    v-model="colorTag"
-                    class="my-input"
-                    lazy-rules
-                    :rules="[(val) => !!val || 'Cor é obrigatória']"
-                  >
-                    <template v-slot:append>
-                      <q-icon name="colorize" class="cursor-pointer">
-                        <q-popup-proxy
-                          cover
-                          transition-show="scale"
-                          transition-hide="scale"
-                        >
-                          <q-color v-model="colorTag" />
-                        </q-popup-proxy>
-                      </q-icon>
-                    </template>
-                  </q-input>
-                </div>
-                <q-btn
-                  class="q-mt-xs"
-                  color="primary"
-                  label="Criar"
-                  type="submit"
-                />
-              </q-form>
-            </q-slide-transition>
-
-            <!--LIST TAGS-->
-            <q-list
-              style="max-height: 300px; overflow-y: scroll"
-              bordered
-              class="rounded-borders q-mt-md"
-              separator
-              v-if="tags.length > 0"
-              dense
-            >
-              <q-item
-                clickable
-                v-ripple
-                v-for="tag in tags"
-                :key="tag.id"
-                dense
-              >
-                <q-item-section avatar>
-                  <q-icon name="tag" :style="`color: ${tag.color}`" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label>{{ tag.name }}</q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                  <q-checkbox v-model="tagsSelected" :val="tag.id" />
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </div>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
+    <tags-list
+      v-model="showTagsList"
+      :selectionMode="tagsListSelectionMode"
+      @submitSelection="onTagsSubmitted"
+    />
   </q-page>
 </template>
 
@@ -272,7 +162,7 @@ export default defineComponent({
     const descriptionNewItem = ref('');
     const countStartNewItem = ref(0);
 
-    const dialogTags = ref(false)
+    const showTagsList = ref(false)
     const dialogItem = ref(false)
     const tags = ref([])
     const tagsSelected = ref([])
@@ -281,9 +171,17 @@ export default defineComponent({
         return tags.value.find((tag) => tag.id === id)
       })
     })
-    const newTagTitle = ref();
-    const colorTag = ref(randomColor());
-    const createNewTag = ref(false);
+
+    const tagsListSelectionMode = ref(false);
+
+    function openTagsSelection() {
+      tagsListSelectionMode.value = true;
+      showTagsList.value = true;
+    }
+
+    function onTagsSubmitted(selected) {
+      tagsSelected.value = selected.map(t => t.id);
+    }
 
     const todoList = ref([])
     const simplesList = ref([])
@@ -648,12 +546,7 @@ export default defineComponent({
       listType,
       titleNewItem,
       descriptionNewItem,
-      dialogTags,
       tags,
-      newTagTitle,
-      colorTag,
-      createNewTag,
-      createNewTagFunction,
       tagsSelected,
       tagsSelectedData,
       getContrastColor,
@@ -677,12 +570,17 @@ export default defineComponent({
       editItem,
       duplicateItem,
       deleteItem,
+      showTagsList,
+      tagsListSelectionMode,
+      openTagsSelection,
+      onTagsSubmitted,
     }
 
   },
   components: {
     CardItem: defineAsyncComponent(() => import('components/CardItem.vue')),
     CreateOrEditItemDialog: defineAsyncComponent(() => import('components/CreateOrEditItemDialog.vue')),
+    TagsList: defineAsyncComponent(() => import('components/TagsList.vue')),
   }
 });
 </script>

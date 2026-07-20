@@ -107,7 +107,21 @@
       :width="250"
     >
       <q-list>
-        <q-item-label header class="text-bold"> Menu </q-item-label>
+        <q-item-label
+          header
+          class="text-bold flex row justify-between items-center"
+        >
+          <span>Menu</span>
+          <q-btn
+            flat
+            dense
+            icon="sell"
+            color="primary"
+            label="Tags"
+            @click="showTags = true"
+            size="sm"
+          />
+        </q-item-label>
 
         <q-item
           clickable
@@ -130,11 +144,13 @@
     <q-page-container>
       <router-view />
     </q-page-container>
+
+    <tags-list v-model="showTags" :selection-mode="false" />
   </q-layout>
 </template>
 
 <script>
-import { defineComponent, onMounted, ref } from "vue";
+import { defineComponent, onMounted, ref, defineAsyncComponent } from "vue";
 import { useConfig } from "src/stores/config-store";
 import { storeToRefs } from "pinia";
 import { useQuasar } from "quasar";
@@ -142,7 +158,9 @@ import { useQuasar } from "quasar";
 export default defineComponent({
   name: "MainLayout",
 
-  components: {},
+  components: {
+    TagsList: defineAsyncComponent(() => import("components/TagsList.vue")),
+  },
 
   setup() {
     const linksList = ref([
@@ -161,6 +179,7 @@ export default defineComponent({
     const { confirmDeleteItem, persistLastTabCategory } =
       storeToRefs(configStore);
     const leftDrawerOpen = ref(false);
+    const showTags = ref(false);
 
     onMounted(() => {
       leftDrawerOpen.value = false;
@@ -173,6 +192,7 @@ export default defineComponent({
       persistLastTabCategory,
       configRef,
       aboutAppRef,
+      showTags,
     };
   },
 });
