@@ -159,7 +159,7 @@ export default defineComponent({
   name: "MainLayout",
 
   components: {
-    TagsList: defineAsyncComponent(() => import("components/TagsList.vue")),
+    TagsList: defineAsyncComponent(() => import("components/Tags/TagsList.vue")),
   },
 
   setup() {

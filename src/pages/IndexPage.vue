@@ -580,7 +580,7 @@ export default defineComponent({
   components: {
     CardItem: defineAsyncComponent(() => import('components/CardItem.vue')),
     CreateOrEditItemDialog: defineAsyncComponent(() => import('components/CreateOrEditItemDialog.vue')),
-    TagsList: defineAsyncComponent(() => import('components/TagsList.vue')),
+    TagsList: defineAsyncComponent(() => import('components/Tags/TagsList.vue')),
   }
 });
 </script>

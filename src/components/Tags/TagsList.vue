@@ -244,7 +244,7 @@ export default defineComponent({
       import("src/components/DialogBase.vue")
     ),
     CreateOrEditTagDialog: defineAsyncComponent(() =>
-      import("src/components/CreateOrEditTagDialog.vue")
+      import("src/components/Tags/CreateOrEditTagDialog.vue")
     ),
   },
   setup(props) {
