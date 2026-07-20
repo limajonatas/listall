@@ -33,8 +33,29 @@
 
       <!--FOOTER-->
       <q-card-section :class="paddingCard" v-if="$slots.footer">
-        <slot name="footer"></slot>
+        <slot name="footer"> </slot>
       </q-card-section>
+      <q-card-actions
+        align="between"
+        :class="paddingCard"
+        v-if="cancelLabel || saveLabel"
+      >
+        <q-btn
+          v-if="cancelLabel"
+          :label="cancelLabel"
+          :color="cancelColor"
+          flat
+          v-close-popup="vClosePopupCancel"
+          @click="$emit('cancel')"
+        />
+        <q-btn
+          v-if="saveLabel"
+          :label="saveLabel"
+          :color="saveColor"
+          @click="$emit('save')"
+          v-close-popup="vClosePopupSave"
+        />
+      </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
@@ -50,7 +71,7 @@ export default defineComponent({
     },
     title: {
       type: String,
-      default: "",
+      required: true,
     },
     colorTitle: {
       type: String,
@@ -59,6 +80,30 @@ export default defineComponent({
     paddingCard: {
       type: String,
       default: "",
+    },
+    cancelLabel: {
+      type: String,
+      default: "",
+    },
+    cancelColor: {
+      type: String,
+      default: "grey",
+    },
+    saveLabel: {
+      type: String,
+      default: "",
+    },
+    saveColor: {
+      type: String,
+      default: "primary",
+    },
+    vClosePopupCancel: {
+      type: Boolean,
+      default: true,
+    },
+    vClosePopupSave: {
+      type: Boolean,
+      default: false,
     },
   },
   emits: ["update:modelValue", "hide", "show"],

@@ -3,6 +3,11 @@
     :model-value="modelValue"
     :title="isEdit ? 'Editar Tag' : 'Nova Tag'"
     @update:model-value="$emit('update:modelValue', $event)"
+    @save="saveTag"
+    :save-label="isEdit ? 'Salvar' : 'Criar'"
+    :save-color="isEdit ? 'warning' : 'primary'"
+    cancel-label="Cancelar"
+    :v-close-popup-save="true"
   >
     <q-form @submit="saveTag" class="q-gutter-md q-pa-sm">
       <q-input
@@ -55,12 +60,6 @@
       </q-input>
     </q-form>
 
-    <template #footer>
-      <q-card-actions align="right" class="q-pa-none q-pt-sm">
-        <q-btn label="Cancelar" color="grey" flat v-close-popup />
-        <q-btn label="Salvar" color="primary" @click="saveTag" />
-      </q-card-actions>
-    </template>
   </dialog-base>
 </template>
 
