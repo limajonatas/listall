@@ -3,6 +3,7 @@
     :model-value="modelValue"
     title="Tags"
     @update:model-value="$emit('update:modelValue', $event)"
+    @hide="resetSelection"
   >
     <!-- PESQUISA -->
     <q-input
@@ -19,7 +20,7 @@
     </q-input>
     <!-- HEADER DA LISTA / SELEÇÃO -->
     <q-item
-      class="row flex justify-between items-center q-pb-none"
+      class="row flex justify-between items-center q-pa-none"
       :class="{ 'q-pr-lg': selectionActiveComputed }"
       dense
     >
@@ -28,7 +29,7 @@
         {{ tags.filter((t) => t.selected).length }} tag(s) selecionada(s)
       </div>
       <!-- CRIAR TAG -->
-      <div v-else class="q-pl-sm">
+      <div v-else>
         <q-btn
           flat
           dense
@@ -177,19 +178,21 @@
           @click="deleteMultiple"
         />
         <!-- BOTÃO SELECIONAR VÁRIOS (quando acionado externamente) -->
-        <q-btn
-          v-else
-          color="primary"
-          :label="actionButtonTitle"
-          @click="
-            $emit(
-              'submitSelection',
-              tags.filter((t) => t.selected)
-            );
-            selectionActive = false;
-          "
-          v-close-popup
-        />
+        <div v-else class="full-width flex row justify-end">
+          <q-btn
+            color="primary"
+            :label="actionButtonTitle"
+            :disable="tags.filter((t) => t.selected).length === 0"
+            @click="
+              $emit(
+                'submitSelection',
+                tags.filter((t) => t.selected)
+              );
+              selectionActive = false;
+            "
+            v-close-popup
+          />
+        </div>
       </q-card-actions>
     </template>
 
@@ -407,6 +410,12 @@ export default defineComponent({
       showCreateDialog.value = true;
     }
 
+    function resetSelection() {
+      selectionActive.value = false;
+      tags.value.forEach((t) => (t.selected = false));
+      search.value = "";
+    }
+
     onMounted(() => {
       getAllTags();
     });
@@ -430,6 +439,7 @@ export default defineComponent({
       openCreateDialog,
       openEditDialog,
       getAllTags,
+      resetSelection,
     };
   },
 });
