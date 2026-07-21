@@ -354,6 +354,27 @@ export const tagService = {
   },
   /** @param {number} id */
   async remove(id) {
-    return await db.tags.delete(id);
+    return await db.transaction(
+      "rw",
+      db.tags,
+      db.todo,
+      db.list,
+      db.counter,
+      async () => {
+        // 1. Remove a tag em si
+        await db.tags.delete(id);
+
+        // 2. Remove as referências a esta tag em todos os itens das outras coleções
+        const stores = [db.todo, db.list, db.counter];
+        for (const store of stores) {
+          await store
+            .filter((item) => item.tags && item.tags.includes(id))
+            .modify((item) => {
+              item.tags = item.tags.filter((tagId) => tagId !== id);
+              item.updatedAt = new Date().toISOString();
+            });
+        }
+      }
+    );
   },
 };
