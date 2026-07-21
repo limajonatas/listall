@@ -1,10 +1,18 @@
 <template>
   <dialog-base
-    :model-value="modelValue"
-    title="Tags"
     @update:model-value="$emit('update:modelValue', $event)"
     @hide="resetSelection"
     @show="getAllTags"
+    @cancelButton="cancelButtonPressed"
+    @okButton="okButtonPressed"
+    :model-value="modelValue"
+    :cancel-button-label="cancelButtonLabelComputed"
+    :v-close-popup-cancel-button="false"
+    :ok-button-label="okButtonLabelComputed"
+    :v-close-popup-ok-button="selectionActiveComputed && selectionMode"
+    :ok-button-color="!selectionMode ? 'negative' : 'primary'"
+    :disable-ok-button="tags.filter((t) => t.selected).length === 0"
+    title="Tags"
   >
     <!-- PESQUISA -->
     <q-input
@@ -42,7 +50,7 @@
       </div>
       <!-- CHECKBOX SELECIONAR TODAS - se estiver em modo de seleção -->
       <q-checkbox
-        v-if="selectionActiveComputed"
+        v-if="selectionActiveComputed && tags.length > 0"
         dense
         v-model="selectAll"
         label="Todas"
@@ -51,7 +59,7 @@
       />
       <!-- BOTÃO MÚLTIPLA SELEÇÃO - se não estiver em modo de seleção -->
       <q-btn
-        v-else-if="!selectionMode"
+        v-else-if="!selectionMode && tags.length > 0"
         flat
         color="primary"
         dense
@@ -155,47 +163,6 @@
         </div>
       </transition>
     </div>
-
-    <!-- RODAPÉ - Apenas no modo de seleção -->
-    <template #footer v-if="selectionActiveComputed">
-      <q-card-actions align="between" class="q-pa-none q-pt-sm">
-        <q-btn
-          v-if="!selectionMode"
-          flat
-          color="grey"
-          label="Cancelar"
-          @click="
-            selectionActive = false;
-            tags.forEach((t) => (t.selected = false));
-          "
-        />
-
-        <!-- BOTÃO EXCLUIR VÁRIOS (apenas em modo de edição da página) -->
-        <q-btn
-          v-if="!selectionMode"
-          color="negative"
-          label="Excluir"
-          :disable="tags.filter((t) => t.selected).length === 0"
-          @click="deleteMultiple"
-        />
-        <!-- BOTÃO SELECIONAR VÁRIOS (quando acionado externamente) -->
-        <div v-else class="full-width flex row justify-end">
-          <q-btn
-            color="primary"
-            :label="actionButtonTitle"
-            :disable="tags.filter((t) => t.selected).length === 0"
-            @click="
-              $emit(
-                'submitSelection',
-                tags.filter((t) => t.selected)
-              );
-              selectionActive = false;
-            "
-            v-close-popup
-          />
-        </div>
-      </q-card-actions>
-    </template>
 
     <create-or-edit-tag-dialog
       v-model="showCreateDialog"
@@ -451,6 +418,43 @@ export default defineComponent({
       window.dispatchEvent(new CustomEvent("tags-updated"));
     }
 
+    function okButtonPressed() {
+      if (!props.selectionMode) {
+        tags.value.forEach((t) => (t.selected = false));
+      } else {
+        emit(
+          "submitSelection",
+          tags.value.filter((t) => t.selected)
+        );
+      }
+      selectionActive.value = false;
+    }
+
+    function cancelButtonPressed() {
+      selectionActive.value = false;
+      tags.value.forEach((t) => (t.selected = false));
+    }
+
+    const okButtonLabelComputed = computed(() => {
+      if (!selectionActiveComputed.value) {
+        return undefined;
+      }
+      if (!props.selectionMode) {
+        return "Excluir";
+      }
+      return props.actionButtonTitle;
+    });
+
+    const cancelButtonLabelComputed = computed(() => {
+      if (!selectionActiveComputed.value) {
+        return undefined;
+      }
+      if (!props.selectionMode) {
+        return "Cancelar";
+      }
+      return props.cancelButtonTitle;
+    });
+
     onMounted(() => {
       getAllTags();
     });
@@ -476,6 +480,10 @@ export default defineComponent({
       getAllTags,
       resetSelection,
       handleTagSaved,
+      okButtonPressed,
+      cancelButtonPressed,
+      okButtonLabelComputed,
+      cancelButtonLabelComputed,
     };
   },
 });

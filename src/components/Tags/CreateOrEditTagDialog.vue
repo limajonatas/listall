@@ -2,12 +2,12 @@
   <dialog-base
     :model-value="modelValue"
     :title="isEdit ? 'Editar Tag' : 'Nova Tag'"
+    :ok-button-label="isEdit ? 'Salvar' : 'Criar'"
+    :ok-button-color="isEdit ? 'warning' : 'primary'"
+    :v-close-popup-ok-button="true"
+    cancel-button-label="Cancelar"
     @update:model-value="$emit('update:modelValue', $event)"
-    @save="saveTag"
-    :save-label="isEdit ? 'Salvar' : 'Criar'"
-    :save-color="isEdit ? 'warning' : 'primary'"
-    cancel-label="Cancelar"
-    :v-close-popup-save="true"
+    @okButton="saveTag"
   >
     <q-form @submit="saveTag" class="q-gutter-md q-pa-sm">
       <q-input
@@ -59,7 +59,6 @@
         </template>
       </q-input>
     </q-form>
-
   </dialog-base>
 </template>
 
@@ -99,6 +98,7 @@ export default defineComponent({
       "#BA68C8",
       "#9575CD",
       "#7986CB",
+      "#FF33FF",
       "#64B5F6",
       "#4FC3F7",
       "#4DD0E1",
@@ -113,26 +113,38 @@ export default defineComponent({
       "#A1887F",
       "#E0E0E0",
       "#90A4AE",
+      "#000000",
     ];
 
+    //Observa a abertura do dialog para carregar os dados da tag a ser editada
     watch(
-      () => props.modelValue,
+      () => props.modelValue, //open/close dialog
       (val) => {
         if (val) {
           if (props.tagToEdit) {
+            // if there is a tag to edit
             isEdit.value = true;
-            form.value = { ...props.tagToEdit };
+            form.value = { ...props.tagToEdit }; //assign the tag to edit to the form
           } else {
+            // if there is no tag to edit
             isEdit.value = false;
             form.value = {
               name: "",
-              color: randomColor(),
+              color: randomColor(), //assign a random color
             };
           }
         }
       }
     );
 
+    /**
+     * Salva a tag.
+     * verifica se há nome na tag;
+     * verifica se é edição ou criação;
+     * salva/atualiza no banco de dados;
+     * emite evento de salvamento;
+     * fecha o dialog;
+     */
     async function saveTag() {
       if (!form.value.name) return;
 

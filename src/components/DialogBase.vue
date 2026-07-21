@@ -36,24 +36,25 @@
         <slot name="footer"> </slot>
       </q-card-section>
       <q-card-actions
-        align="between"
+        align="right"
         :class="paddingCard"
-        v-if="cancelLabel || saveLabel"
+        v-if="cancelButtonLabel || okButtonLabel"
       >
         <q-btn
-          v-if="cancelLabel"
-          :label="cancelLabel"
-          :color="cancelColor"
+          v-if="cancelButtonLabel"
+          :label="cancelButtonLabel"
+          :color="cancelButtonColor"
           flat
-          v-close-popup="vClosePopupCancel"
-          @click="$emit('cancel')"
+          v-close-popup="vClosePopupCancelButton"
+          @click="$emit('cancelButton')"
         />
         <q-btn
-          v-if="saveLabel"
-          :label="saveLabel"
-          :color="saveColor"
-          @click="$emit('save')"
-          v-close-popup="vClosePopupSave"
+          v-if="okButtonLabel"
+          :label="okButtonLabel"
+          :color="okButtonColor"
+          @click="$emit('okButton')"
+          v-close-popup="vClosePopupOkButton"
+          :disable="disableOkButton"
         />
       </q-card-actions>
     </q-card>
@@ -81,32 +82,36 @@ export default defineComponent({
       type: String,
       default: "",
     },
-    cancelLabel: {
+    cancelButtonLabel: {
       type: String,
       default: "",
     },
-    cancelColor: {
+    cancelButtonColor: {
       type: String,
       default: "grey",
     },
-    saveLabel: {
+    okButtonLabel: {
       type: String,
       default: "",
     },
-    saveColor: {
+    okButtonColor: {
       type: String,
       default: "primary",
     },
-    vClosePopupCancel: {
+    vClosePopupCancelButton: {
       type: Boolean,
       default: true,
     },
-    vClosePopupSave: {
+    vClosePopupOkButton: {
+      type: Boolean,
+      default: false,
+    },
+    disableOkButton: {
       type: Boolean,
       default: false,
     },
   },
-  emits: ["update:modelValue", "hide", "show", "save", "cancel"],
+  emits: ["update:modelValue", "hide", "show", "okButton", "cancelButton"],
   setup() {
     return {};
   },
