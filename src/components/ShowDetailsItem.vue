@@ -81,7 +81,6 @@
 </template>
 
 <script>
-import { tagService } from "src/db/dbServices";
 import { formatDate, getContrastColor } from "src/utils/utils";
 import { defineComponent, computed, ref, onMounted } from "vue";
 import DialogBase from "src/components/DialogBase.vue";
@@ -97,26 +96,23 @@ export default defineComponent({
       type: Object,
       required: true,
     },
+    globalTags: {
+      type: Array,
+      default: () => [],
+    },
   },
   emits: ["update:modelValue", "edit", "duplicate", "delete"],
   components: { DialogBase },
   setup(props) {
-    const tags = ref([]);
-
+    // Mapeia os IDs das tags vinculadas ao item usando as tags globais enviadas pelo Listador
+    // Garante que mostremos a propriedade name e color da tag atualizada em tempo real
     const tagsSelectedData = computed(() => {
-      return props.item.tags.map((id) => {
-        return tags.value.find((tag) => tag.id === id);
-      });
-    });
-
-    function getAllTags() {
-      tagService.getAll().then((tagsResponse) => {
-        tags.value = tagsResponse;
-      });
-    }
-
-    onMounted(() => {
-      getAllTags();
+      if (!props.item.tags || props.item.tags.length === 0) return [];
+      return props.item.tags
+        .map((id) => {
+          return props.globalTags.find((tag) => tag.id === id);
+        })
+        .filter(Boolean);
     });
 
     return { getContrastColor, formatDate, tagsSelectedData };

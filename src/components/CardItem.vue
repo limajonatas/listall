@@ -67,6 +67,7 @@
     <show-details-item
       v-model="detailDialog"
       :item="item"
+      :global-tags="globalTags"
       @edit="$emit('edit', item)"
       @duplicate="$emit('duplicate', item)"
       @delete="$emit('delete', item)"
@@ -75,7 +76,6 @@
 </template>
 
 <script>
-import { tagService } from "src/db/dbServices";
 import {
   defineComponent,
   computed,
@@ -100,27 +100,25 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    globalTags: {
+      type: Array,
+      default: () => [],
+    },
   },
   emits: ["check", "increment", "decrement", "edit", "duplicate", "delete"],
   setup(props) {
     const checkItem = ref(props.item.check);
-    const tags = ref([]);
     const detailDialog = ref(false);
 
+    // Mapeia os dados completos das tags (nome, cor) baseados nos IDs vindos de props.item.tags
+    // Faz o cruzamento de dados com props.globalTags que veio da IndexPage (evitando N repetidos reads do IndexedDB)
     const tagsSelectedData = computed(() => {
-      return props.item.tags.map((id) => {
-        return tags.value.find((tag) => tag.id === id);
-      });
-    });
-
-    function getAllTags() {
-      tagService.getAll().then((tagsResponse) => {
-        tags.value = tagsResponse;
-      });
-    }
-
-    onMounted(() => {
-      getAllTags();
+      if (!props.item.tags || props.item.tags.length === 0) return [];
+      return props.item.tags
+        .map((id) => {
+          return props.globalTags.find((tag) => tag.id === id);
+        })
+        .filter(Boolean); // filtra caso alguma tag não exista
     });
 
     return {
@@ -140,7 +138,6 @@ export default defineComponent({
 </script>
 
 <style lang="scss" scoped>
-
 .title-clamp {
   display: -webkit-box;
   -webkit-line-clamp: 2;
