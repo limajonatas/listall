@@ -106,7 +106,7 @@ export default defineComponent({
       default: false,
     },
   },
-  emits: ["update:modelValue", "hide", "show"],
+  emits: ["update:modelValue", "hide", "show", "save", "cancel"],
   setup() {
     return {};
   },
