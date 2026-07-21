@@ -125,6 +125,9 @@ export default defineComponent({
   max-height: calc(100vh - 300px);
   overflow-y: auto;
 }
+.actions-buttons {
+  gap: 4px;
+}
 
 @media (max-width: 400px) {
   .description-section {
@@ -134,7 +137,7 @@ export default defineComponent({
   .actions-buttons {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
     &__button {
       width: 100%;
     }
