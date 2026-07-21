@@ -47,6 +47,7 @@
           >
             <card-item
               :item="item"
+              :global-tags="tags"
               :is-todo="tab == 'to-do'"
               :is-count="tab == 'count'"
               @check="checkItem"
@@ -86,6 +87,7 @@
               <template v-slot:default>
                 <card-item
                   :item="item"
+                  :global-tags="tags"
                   :is-todo="tab == 'to-do'"
                   :is-count="tab == 'count'"
                   @check="checkItem"
@@ -136,13 +138,18 @@
     <tags-list
       v-model="showTagsList"
       :selectionMode="tagsListSelectionMode"
+      :initialSelected="tagsSelected"
       @submitSelection="onTagsSubmitted"
+      @tagsUpdated="
+        getAllTags();
+        getAllLists();
+      "
     />
   </q-page>
 </template>
 
 <script lang="js">
-import { computed, defineAsyncComponent, defineComponent, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, defineComponent, onMounted, onUnmounted, ref, watch } from 'vue'
 import { counterService, listService, tagService, todoService } from 'src/db/dbServices'
 import { Dialog, Notify } from 'quasar';
 import { useConfig } from "src/stores/config-store";
@@ -473,16 +480,36 @@ export default defineComponent({
     const editingItem = ref(false);
     const editingItemData = ref();
 
-    const editItem = (item) => {
+    const editItem = async (item) => {
       listType.value = tab.value; // to-do / simples / count
-      titleNewItem.value = item.title;
-      descriptionNewItem.value = item.description;
-      tagsSelected.value = item.tags;
-      if (item.value !== undefined) countStartNewItem.value = item.value;
 
-      editingItem.value = true;
-      editingItemData.value = {...item};
-      dialogItem.value = true; // abre o dialog de edição
+      const getService = (type) => {
+        if (type === 'to-do') return todoService;
+        if (type === 'simples') return listService;
+        if (type === 'count') return counterService;
+      };
+
+      const service = getService(listType.value);
+      if (service) {
+        try {
+          // Requisição "Show" (obter item remoto)
+          // Em vez de usar os dados da listagem (item da tela), vai ao banco consultar sua versão mais fresca.
+          // Isto prepara o ambiente para funcionar exatamente como ocorreria consumindo uma RestAPI externa (GET /api/lists/:id).
+          const freshItem = await service.getById(item.id);
+          if (freshItem) {
+            titleNewItem.value = freshItem.title;
+            descriptionNewItem.value = freshItem.description;
+            tagsSelected.value = freshItem.tags;
+            if (freshItem.value !== undefined) countStartNewItem.value = freshItem.value;
+
+            editingItem.value = true;
+            editingItemData.value = {...freshItem};
+            dialogItem.value = true; // abre o dialog de edição
+          }
+        } catch (error) {
+          Notify.create({ message: "Erro ao buscar detalhes do item", color: "negative" });
+        }
+      }
     }
 
     function onLeft({ reset }, item) {
@@ -537,9 +564,23 @@ export default defineComponent({
     }
 
 
+    // Ouvinte para reações de atualizações propagadas pela tagList
+    // mesmo quando ela é disparada de outro ponto do app (ex: menu gaveta)
+    function handleGlobalTagsUpdate() {
+      getAllTags();
+      getAllLists();
+    }
+
     onMounted(() => {
       getAllTags();
       getAllLists();
+      // Inscreve a página para escutar atualizações globais das Tags
+      window.addEventListener('tags-updated', handleGlobalTagsUpdate);
+    })
+
+    onUnmounted(() => {
+      // Remove o ouvinte ao destruir a index
+      window.removeEventListener('tags-updated', handleGlobalTagsUpdate);
     })
 
     return {
@@ -574,6 +615,8 @@ export default defineComponent({
       tagsListSelectionMode,
       openTagsSelection,
       onTagsSubmitted,
+      getAllTags,
+      getAllLists,
     }
 
   },

@@ -4,6 +4,7 @@
     title="Tags"
     @update:model-value="$emit('update:modelValue', $event)"
     @hide="resetSelection"
+    @show="getAllTags"
   >
     <!-- PESQUISA -->
     <q-input
@@ -199,7 +200,7 @@
     <create-or-edit-tag-dialog
       v-model="showCreateDialog"
       :tag-to-edit="tagToEdit"
-      @saved="getAllTags"
+      @saved="handleTagSaved"
     />
   </dialog-base>
 </template>
@@ -237,8 +238,14 @@ export default defineComponent({
       type: String,
       default: "Selecionar",
     },
+    // Array com IDs das tags previamente selecionadas (usado no form de edição de Card)
+    initialSelected: {
+      type: Array,
+      default: () => [],
+    },
   },
-  emits: ["update:modelValue", "submitSelection"],
+  emits: ["update:modelValue", "submitSelection", "tagsUpdated"],
+  // tagsUpdated: evento local que o pai de escopo pode ouvir (útil caso TagsList fosse componente base)
   components: {
     DialogBase: defineAsyncComponent(() =>
       import("src/components/DialogBase.vue")
@@ -247,7 +254,7 @@ export default defineComponent({
       import("src/components/Tags/CreateOrEditTagDialog.vue")
     ),
   },
-  setup(props) {
+  setup(props, { emit }) {
     const tags = ref([]); // todas as tags do banco
     const search = ref(""); // texto digitado no campo de pesquisa
     const listRef = ref(null); // ref ao elemento da q-list (para ler scrollTop etc)
@@ -286,9 +293,23 @@ export default defineComponent({
       nextTick(checkScroll);
     });
 
+    // Reflete no visual caso o parent preencha itens (Ex: clicou num item salvo e o popup leu seus itens marcados pela IndexPage).
+    watch(
+      () => props.initialSelected,
+      (newVal) => {
+        tags.value.forEach((t) => {
+          t.selected = newVal.includes(t.id);
+        });
+      },
+      { immediate: true }
+    );
+
     function getAllTags() {
       tagService.getAll().then((tagsResponse) => {
-        tags.value = tagsResponse.map((t) => ({ ...t, selected: false }));
+        tags.value = tagsResponse.map((t) => ({
+          ...t,
+          selected: props.initialSelected.includes(t.id),
+        }));
         // checar após renderizar
         setTimeout(checkScroll, 100);
       });
@@ -353,6 +374,9 @@ export default defineComponent({
             timeout: 2000,
           });
           selectionActive.value = false;
+          emit("tagsUpdated");
+          // Notifica aplicações soltas pela árvore para recarregarem referências órfãs e tags
+          window.dispatchEvent(new CustomEvent("tags-updated"));
           getAllTags();
         } catch (error) {
           console.error(error.message);
@@ -385,6 +409,9 @@ export default defineComponent({
             position: "top",
             timeout: 1500,
           });
+          emit("tagsUpdated");
+          // Dispara também evento global
+          window.dispatchEvent(new CustomEvent("tags-updated"));
           getAllTags();
         } catch (error) {
           Notify.create({
@@ -416,6 +443,14 @@ export default defineComponent({
       search.value = "";
     }
 
+    // Lida com o fechamento do diálogo de criar/editar tag e reporta aos pais
+    function handleTagSaved() {
+      getAllTags();
+      emit("tagsUpdated");
+      // Importante para recarregar as listas em IndexPage
+      window.dispatchEvent(new CustomEvent("tags-updated"));
+    }
+
     onMounted(() => {
       getAllTags();
     });
@@ -440,6 +475,7 @@ export default defineComponent({
       openEditDialog,
       getAllTags,
       resetSelection,
+      handleTagSaved,
     };
   },
 });
